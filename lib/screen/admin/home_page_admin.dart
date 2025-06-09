@@ -1,8 +1,8 @@
 import 'package:asset_management/screen/devices_screen.dart';
-import 'package:asset_management/screen/admin/incident.dart';
+import 'package:asset_management/screen/admin/admin_incident.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -21,15 +21,28 @@ void showComingSoonPopup(BuildContext context) {
 }
 
 class AdminHomePage extends StatelessWidget {
+  // 1. Declare final fields to store the passed data
+  final String userName;
+  final String userEmail;
+  final UserRole userRole;
+
+  // 2. Add a constructor to receive the data
+  const AdminHomePage({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+    required this.userRole,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: Stack(
         children: [
-          // Background image
           Container(
-            height: MediaQuery.of(context).size.height * 0.33, // ~3/4 height of visible top area
+            height: MediaQuery.of(context).size.height * 0.33,
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/bg_image.png'),
@@ -38,7 +51,6 @@ class AdminHomePage extends StatelessWidget {
             ),
           ),
 
-          // Scrollable foreground content
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,9 +72,10 @@ class AdminHomePage extends StatelessWidget {
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text("Admin", style: TextStyle(fontSize: 18, color: Colors.white)),
-                              Text("Admin@Admin.com", style: TextStyle(color: Colors.white70)),
+                            children: [
+                              // 3. Use the passed data here
+                              Text(userName, style: const TextStyle(fontSize: 18, color: Colors.white)),
+                              Text(userEmail, style: const TextStyle(color: Colors.white70)),
                             ],
                           ),
                         ],
@@ -72,7 +85,7 @@ class AdminHomePage extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 4),
-                _buildCompanyCard(), // overlay
+                _buildCompanyCard(),
                 const SizedBox(height: 15),
 
                 const Padding(
@@ -85,7 +98,7 @@ class AdminHomePage extends StatelessWidget {
                   title: 'Incident',
                   subtitle: 'Lorem ipsum',
                   iconPath: 'assets/incident.png',
-                  onTap: (){
+                  onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const AdminIncidentScreen()),
@@ -93,25 +106,6 @@ class AdminHomePage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 12),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Devices', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
-                const SizedBox(height: 12),
-
-                _customCard(
-                  title: 'Devices',
-                  subtitle: 'Lorem ipsum',
-                  iconPath: 'assets/Devices.png',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const DevicesScreen()),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -119,8 +113,6 @@ class AdminHomePage extends StatelessWidget {
       ),
     );
   }
-
-
 
   Widget _buildCompanyCard() {
     return Padding(
@@ -134,32 +126,32 @@ class AdminHomePage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 25,
                     backgroundImage: AssetImage('assets/company.png'),
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text("Admin@Admin.com", style: TextStyle(color: Colors.grey)),
+                      const Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      // Use the passed userEmail here if it represents the company email
+                      const Text("Admin@Admin.com", style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  children: [
-    Text(
-      DateFormat("dd MMM yyyy").format(DateTime.now()),
-      style: TextStyle(fontWeight: FontWeight.bold),
-    ),
-    Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),
-  ],
-),
-
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    DateFormat("dd MMM yyyy").format(DateTime.now()), // Corrected format string for full year
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),
+                ],
+              ),
             ],
           ),
         ),

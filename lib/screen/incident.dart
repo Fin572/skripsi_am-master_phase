@@ -310,7 +310,7 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                 final dynamic result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => IncidentDetail( // Corrected to IncidentDetail (no 'Screen')
+                    builder: (context) => IncidentDetailScreen( // Corrected to IncidentDetail (no 'Screen')
                       availableLocations: _mockLocations,
                       availableAssets: _mockAssets,
                     ),

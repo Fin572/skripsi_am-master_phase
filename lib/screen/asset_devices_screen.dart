@@ -1,13 +1,17 @@
 // lib/screens/asset_devices_screen.dart
-import 'package:asset_management/screen/asset_category_detail_screen.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:asset_management/screen/add_device_screen.dart';
+import 'package:asset_management/screen/asset_category_detail_screen.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:asset_management/screen/models/asset.dart'; // Import the Asset model
+import 'package:asset_management/screen/models/asset.dart';
 
 class AssetDevicesScreen extends StatefulWidget {
   final bool showSuccessPopup;
 
-  const AssetDevicesScreen({Key? key, this.showSuccessPopup = false}) : super(key: key);
+  const AssetDevicesScreen({Key? key, required this.showSuccessPopup})
+      : super(key: key);
 
   @override
   State<AssetDevicesScreen> createState() => _AssetDevicesScreenState();
@@ -15,100 +19,14 @@ class AssetDevicesScreen extends StatefulWidget {
 
 class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
   bool _showSuccessPopup = false;
-
-  // This list will contain your asset categories, now mapped to a structure
-  // that can generate Asset objects for the next screen.
-  final List<Map<String, dynamic>> _assetCategoryData = [
-    {
-      'categoryName': 'CCTV',
-      'deviceCount': '4',
-      'assets': [ // Actual Asset objects for CCTV category
-        Asset(
-          id: '#001001',
-          name: 'CCTV',
-          category: 'Electronics',
-          locationId: 'LOC001',
-          locationInfo: 'Jl Pertiwi 12',
-          latitude: -6.373706652012434,
-          longitude: 106.807699530,
-          personInCharge: 'Danny',
-          phoneNumber: '081208120812',
-          barcodeData: 'BC001',
-        ),
-        Asset(
-          id: '#001002',
-          name: 'CCTV Unit 02',
-          category: 'Electronics',
-          locationId: 'LOC001',
-          locationInfo: 'Jl Pertiwi 12',
-          latitude: -6.373706652012434,
-          longitude: 106.807699530,
-          personInCharge: 'Danny',
-          phoneNumber: '081208120812',
-          barcodeData: 'BC002',
-        ),
-        Asset(
-          id: '#001003',
-          name: 'CCTV Unit 03',
-          category: 'Electronics',
-          locationId: 'LOC001',
-          locationInfo: 'Jl Pertiwi 12',
-          latitude: -6.373706652012434,
-          longitude: 106.807699530,
-          personInCharge: 'Danny',
-          phoneNumber: '081208120812',
-          barcodeData: 'BC003',
-        ),
-        Asset(
-          id: '#001004',
-          name: 'CCTV Unit 04',
-          category: 'Electronics',
-          locationId: 'LOC001',
-          locationInfo: 'Jl Pertiwi 12',
-          latitude: -6.373706652012434,
-          longitude: 106.807699530,
-          personInCharge: 'Danny',
-          phoneNumber: '081208120812',
-          barcodeData: 'BC004',
-        ),
-      ]
-    },
-    {
-      'categoryName': 'Electronics',
-      'deviceCount': '2', // Example, changed from 4 to differentiate
-      'assets': [
-        Asset(
-          id: '#ELC001',
-          name: 'Laptop X',
-          category: 'Electronics',
-          locationId: 'LOC002',
-          locationInfo: 'Gudang Barat',
-          latitude: -6.2000,
-          longitude: 106.8000,
-          personInCharge: 'Budi',
-          phoneNumber: '081122334455',
-          barcodeData: 'BC005',
-        ),
-        Asset(
-          id: '#ELC002',
-          name: 'Projector Y',
-          category: 'Electronics',
-          locationId: 'LOC002',
-          locationInfo: 'Gudang Barat',
-          latitude: -6.2000,
-          longitude: 106.8000,
-          personInCharge: 'Budi',
-          phoneNumber: '081122334455',
-          barcodeData: 'BC006',
-        ),
-      ]
-    },
-    // Add more categories with their specific assets if needed
-  ];
+  List<Map<String, dynamic>> _assetCategoryData = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
+    _fetchCategories();
     if (widget.showSuccessPopup) {
       _showSuccessPopup = true;
       Future.delayed(const Duration(seconds: 3), () {
@@ -117,6 +35,34 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
             _showSuccessPopup = false;
           });
         }
+      });
+    }
+  }
+
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/get_asset.php?action=get_categories'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _assetCategoryData = data.cast<Map<String, dynamic>>();
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load categories: ${response.statusCode}';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+        _isLoading = false;
       });
     }
   }
@@ -146,27 +92,32 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: const CompanyInfoCard(
+                child: CompanyInfoCard(
                   ticketNumber: '#000001',
                   companyName: 'PT Dunia Persada',
-                  deviceCount: '6 Assets', // Updated to match dummy data sum
+                  deviceCount: _isLoading
+                      ? 'Loading...'
+                      : '${_assetCategoryData.fold<int>(0, (sum, category) => sum + int.parse(category['deviceCount'] ?? '0'))} Assets',
                 ),
               ),
               Expanded(
-                child: _assetCategoryData.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        itemCount: _assetCategoryData.length,
-                        itemBuilder: (context, index) {
-                          final category = _assetCategoryData[index];
-                          return _buildAssetCategoryCard(
-                            categoryName: category['categoryName']!,
-                            deviceCount: category['deviceCount']!,
-                            assetsInCategory: category['assets'] as List<Asset>, // Pass the actual list of assets
-                          );
-                        },
-                      ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage.isNotEmpty
+                        ? Center(child: Text(_errorMessage))
+                        : _assetCategoryData.isEmpty
+                            ? _buildEmptyState()
+                            : ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                itemCount: _assetCategoryData.length,
+                                itemBuilder: (context, index) {
+                                  final category = _assetCategoryData[index];
+                                  return _buildAssetCategoryCard(
+                                    categoryName: category['categoryName']!,
+                                    deviceCount: category['deviceCount']!,
+                                  );
+                                },
+                              ),
               ),
               Align(
                 alignment: Alignment.bottomCenter,
@@ -174,11 +125,17 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                   padding: const EdgeInsets.only(bottom: 20.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      print('Add device button pressed');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const AddDeviceScreen(availableLocations: [])),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
                       ),
@@ -199,7 +156,8 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
               right: 0,
               child: Container(
                 color: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 child: const SafeArea(
                   child: Row(
                     children: [
@@ -222,7 +180,6 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
   Widget _buildAssetCategoryCard({
     required String categoryName,
     required String deviceCount,
-    required List<Asset> assetsInCategory, // Now accepts List<Asset>
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -232,7 +189,7 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            const Icon(Icons.laptop_mac, size: 40, color: Colors.grey),
+            const Icon(Icons.devices, size: 40, color: Colors.grey),
             const SizedBox(width: 15),
             Expanded(
               child: Column(
@@ -254,13 +211,11 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to AssetCategoryDetailScreen, passing the actual assets
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => AssetCategoryDetailScreen(
                       categoryName: categoryName,
-                      assetsInCategory: assetsInCategory, // Pass the actual list of Asset objects
                     ),
                   ),
                 );
@@ -268,7 +223,8 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
               child: const Row(
                 children: [
                   Text('Detail', style: TextStyle(color: Colors.blue)),
-                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 16, color: Colors.blue),
                 ],
               ),
             ),

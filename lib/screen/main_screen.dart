@@ -55,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           );
         },
+        role: '',
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

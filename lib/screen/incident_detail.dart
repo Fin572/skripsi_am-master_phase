@@ -1,27 +1,20 @@
-// lib/screens/incident_detail.dart
 import 'dart:io';
-import 'package:asset_management/widgets/company_info_card.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:asset_management/screen/models/location.dart';
 import 'package:asset_management/screen/models/asset.dart';
 import 'package:asset_management/screen/models/incident_ticket.dart';
 
-class IncidentDetail extends StatefulWidget {
-  final List<Location> availableLocations;
-  final List<Asset> availableAssets;
-
-  const IncidentDetail({
-    Key? key,
-    required this.availableLocations,
-    required this.availableAssets,
-  }) : super(key: key);
+class IncidentDetailScreen extends StatefulWidget {
+  const IncidentDetailScreen({Key? key, required List<Location> availableLocations, required List<Asset> availableAssets}) : super(key: key);
 
   @override
-  State<IncidentDetail> createState() => _IncidentDetailState();
+  State<IncidentDetailScreen> createState() => _IncidentDetailScreenState();
 }
 
-class _IncidentDetailState extends State<IncidentDetail> {
+class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Location? _selectedLocation;
@@ -39,10 +32,18 @@ class _IncidentDetailState extends State<IncidentDetail> {
     'Lainnya 2',
   ];
 
+  List<Location> _availableLocations = [];
+  List<Asset> _availableAssets = [];
+  bool _isLoadingLocations = true;
+  bool _isLoadingAssets = true;
+
   @override
   void initState() {
     super.initState();
+    _fetchLocations();
+    _fetchAssets();
     _descriptionController.addListener(_validateForm);
+    _assetNameController.addListener(_validateForm);
   }
 
   @override
@@ -52,6 +53,155 @@ class _IncidentDetailState extends State<IncidentDetail> {
     super.dispose();
   }
 
+  Future<void> _fetchLocations() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/location_get.php')).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Location API request timed out');
+          return http.Response('{"status": "error", "message": "Request timed out"}', 408);
+        },
+      );
+      print('Location API Response status: ${response.statusCode}');
+      print('Location API Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Parsed location data: $data');
+
+        String status = (data['status'] as String?)?.toLowerCase() ?? '';
+        if (status == 'success') {
+          List<dynamic>? locations = data['locations'] ?? data['location'] ?? data['data'];
+          if (locations != null && locations.isNotEmpty) {
+            setState(() {
+              _availableLocations = locations.map((location) {
+                print('Processing location: $location');
+                return Location(
+                  id: (location['location_id'] ?? location['id'] ?? '').toString(),
+                  name: location['name'] as String? ?? 'Unknown',
+                );
+              }).toList();
+              print('Available locations: $_availableLocations');
+              _isLoadingLocations = false;
+            });
+          } else {
+            print('No locations found in response');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No locations found')),
+            );
+            setState(() {
+              _isLoadingLocations = false;
+            });
+          }
+        } else {
+          print('API error: status is not success - ${data['message'] ?? 'Unknown error'}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Failed to load locations')),
+          );
+          setState(() {
+            _isLoadingLocations = false;
+          });
+        }
+      } else {
+        print('HTTP error: ${response.statusCode} - ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load locations: ${response.statusCode}')),
+        );
+        setState(() {
+          _isLoadingLocations = false;
+        });
+      }
+    } catch (e) {
+      print('Exception in _fetchLocations: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching locations: $e')),
+      );
+      setState(() {
+        _isLoadingLocations = false;
+      });
+    }
+  }
+
+  Future<void> _fetchAssets() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/devices_get.php')).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Devices API request timed out');
+          return http.Response('{"status": "error", "message": "Request timed out"}', 408);
+        },
+      );
+      print('Devices API Response status: ${response.statusCode}');
+      print('Devices API Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Parsed devices data: $data');
+
+        String status = (data['status'] as String?)?.toLowerCase() ?? '';
+        if (status == 'success') {
+          List<dynamic>? devices = data['devices'] ?? data['device'] ?? data['data'];
+          if (devices != null && devices.isNotEmpty) {
+            setState(() {
+              _availableAssets = devices.map((device) {
+                print('Processing device: $device');
+                final locationId = device['location_id'] != null
+                    ? device['location_id'].toString()
+                    : '0';
+                return Asset(
+                  id: device['id'].toString(),
+                  name: device['name'] as String? ?? 'Unknown',
+                  locationId: locationId,
+                  category: 'Device',
+                  locationInfo: '',
+                  latitude: 0.0,
+                  longitude: 0.0,
+                  personInCharge: '',
+                  phoneNumber: '',
+                  barcodeData: '',
+                );
+              }).toList();
+              print('Available assets: $_availableAssets');
+              _isLoadingAssets = false;
+            });
+          } else {
+            print('No devices found in response');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No devices found')),
+            );
+            setState(() {
+              _isLoadingAssets = false;
+            });
+          }
+        } else {
+          print('API error: status is not success - ${data['message'] ?? 'Unknown error'}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Failed to load devices')),
+          );
+          setState(() {
+            _isLoadingAssets = false;
+          });
+        }
+      } else {
+        print('HTTP error: ${response.statusCode} - ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load devices: ${response.statusCode}')),
+        );
+        setState(() {
+          _isLoadingAssets = false;
+        });
+      }
+    } catch (e) {
+      print('Exception in _fetchAssets: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching devices: $e')),
+      );
+      setState(() {
+        _isLoadingAssets = false;
+      });
+    }
+  }
+
   void _validateForm() {
     setState(() {});
   }
@@ -59,8 +209,11 @@ class _IncidentDetailState extends State<IncidentDetail> {
   bool get _canSubmit {
     bool isLocationSelected = _selectedLocation != null;
     bool isAssetSelected = _selectedAsset != null;
-    bool isDescriptionFilled = _descriptionController.text.isNotEmpty;
+    bool isDescriptionFilled = _descriptionController.text.trim().isNotEmpty;
     bool hasAtLeastOneImage = _incidentImages.any((file) => file != null);
+
+    print('Can submit check: isLocationSelected=$isLocationSelected, isAssetSelected=$isAssetSelected, '
+        'isDescriptionFilled=$isDescriptionFilled, hasAtLeastOneImage=$hasAtLeastOneImage');
 
     return isLocationSelected &&
         isAssetSelected &&
@@ -68,32 +221,105 @@ class _IncidentDetailState extends State<IncidentDetail> {
         hasAtLeastOneImage;
   }
 
-  void _submitTicket() {
+  Future<void> _submitTicket() async {
     if (_formKey.currentState!.validate() && _canSubmit) {
-      final String newTicketId =
-          DateTime.now().millisecondsSinceEpoch.toString().substring(5, 11);
-
-      final List<String> uploadedImagePaths = _incidentImages
-          .whereType<File>()
-          .map((file) => file.path)
-          .toList();
-
-      final newIncidentTicket = IncidentTicket(
-        ticketId: newTicketId,
-        asset: _selectedAsset!,
-        location: _selectedLocation!,
-        description: _descriptionController.text,
-        submissionTime: DateTime.now(),
-        imageUrls: uploadedImagePaths,
-        status: 'Assigned',
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://192.168.1.9/Skripsi/add_incident.php'),
       );
 
-      // Pop with the new ticket object
-      Navigator.pop(context, newIncidentTicket);
+      // Log all fields before sending
+      print('Preparing to submit form data:');
+      print('location_id: ${_selectedLocation!.id}');
+      print('asset_id: ${_selectedAsset!.id}');
+      print('asset_name: ${_assetNameController.text}');
+      print('description: ${_descriptionController.text}');
+      print('status: Assigned');
+
+      request.fields['location_id'] = _selectedLocation!.id.toString();
+      request.fields['asset_id'] = _selectedAsset!.id;
+      request.fields['description'] = _descriptionController.text;
+      request.fields['status'] = 'Assigned';
+      request.fields['asset_name'] = _assetNameController.text;
+
+      final List<String> imageFieldNames = ['image_0', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5'];
+      int imageCount = 0;
+      for (int i = 0; i < _incidentImages.length; i++) {
+        if (_incidentImages[i] != null) {
+          print('Uploading image for ${imageFieldNames[i]}: ${_incidentImages[i]!.path}');
+          request.files.add(await http.MultipartFile.fromPath(
+            imageFieldNames[i],
+            _incidentImages[i]!.path,
+            filename: '${imageFieldNames[i]}.jpg',
+          ));
+          imageCount++;
+        }
+      }
+      print('Total images uploaded: $imageCount');
+
+      print('Submitting data: ${request.fields}');
+
+      try {
+        var response = await request.send();
+        var responseBody = await http.Response.fromStream(response);
+
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${responseBody.body}');
+
+        if (response.statusCode == 200) {
+          var data = json.decode(responseBody.body);
+          if (data['status'] == 'success') {
+            final newIncidentTicket = IncidentTicket(
+              ticketId: data['id'].toString(),
+              asset: _selectedAsset!,
+              location: _selectedLocation!,
+              description: _descriptionController.text,
+              submissionTime: DateTime.now(),
+              imageUrls: _incidentImages.whereType<File>().map((file) => file.path).toList(),
+              status: 'Assigned',
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+            Navigator.pop(context, newIncidentTicket);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server error')),
+          );
+        }
+      } catch (e) {
+        print('Exception during submission: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } else {
+      // Debug which validator failed
+      String validationError = '';
+      if (_selectedLocation == null) {
+        validationError += 'Location ID is required. ';
+      }
+      if (_selectedAsset == null) {
+        validationError += 'Asset ID is required. ';
+      }
+      if (_descriptionController.text.trim().isEmpty) {
+        validationError += 'Description is required. ';
+      }
+      if (!_incidentImages.any((file) => file != null)) {
+        validationError += 'At least one image is required. ';
+      }
+      print('Validation failed: $validationError');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields and upload at least one image.'),
+        SnackBar(
+          content: Text(validationError.isNotEmpty
+              ? validationError
+              : 'Please fill all required fields and upload at least one image.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -107,6 +333,7 @@ class _IncidentDetailState extends State<IncidentDetail> {
     if (pickedFile != null) {
       setState(() {
         _incidentImages[index] = File(pickedFile.path);
+        print('Image picked for index $index: ${pickedFile.path}');
         _validateForm();
       });
     }
@@ -115,6 +342,7 @@ class _IncidentDetailState extends State<IncidentDetail> {
   void _removeImage(int index) {
     setState(() {
       _incidentImages[index] = null;
+      print('Image removed for index $index');
       _validateForm();
     });
   }
@@ -150,32 +378,6 @@ class _IncidentDetailState extends State<IncidentDetail> {
     );
   }
 
-  Future<bool?> _showCancelConfirmationDialog() async {
-    return showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Are you sure?'),
-          content: const Text('Do you want to discard this ticket creation?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,14 +400,12 @@ class _IncidentDetailState extends State<IncidentDetail> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () async {
-            final bool? confirmed = await _showCancelConfirmationDialog();
-            if (confirmed == true) {
-              Navigator.pop(context, false);
-            }
+          onPressed: () {
+            Navigator.pop(context);
           },
         ),
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -214,52 +414,72 @@ class _IncidentDetailState extends State<IncidentDetail> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Use the new reusable CompanyInfoCard widget here
-              // You can pass specific data if needed, or use defaults
-              const CompanyInfoCard(), // Uses default values for ticket number, company, and devices
+              _companycard(),
 
               const SizedBox(height: 20),
-              _buildDropdownField<Location>(
-                value: _selectedLocation,
-                hintText: 'Select Location ID',
-                labelText: 'Location ID',
-                items: widget.availableLocations.map((location) {
-                  return DropdownMenuItem<Location>(
-                    value: location,
-                    child: Text('${location.name} (${location.id})'),
-                  );
-                }).toList(),
-                onChanged: (Location? newValue) {
-                  setState(() {
-                    _selectedLocation = newValue;
-                    _selectedAsset = null;
-                    _assetNameController.clear();
-                  });
-                },
-                validator: (value) => value == null ? 'Location ID is required' : null,
-              ),
+              _isLoadingLocations
+                  ? const Center(child: CircularProgressIndicator())
+                  : _availableLocations.isEmpty
+                      ? const Center(child: Text('No locations available'))
+                      : _buildDropdownField<Location>(
+                          value: _selectedLocation,
+                          hintText: 'Select Location ID',
+                          labelText: 'Location ID',
+                          items: _availableLocations.map((location) {
+                            return DropdownMenuItem<Location>(
+                              value: location,
+                              child: Text('${location.name} (${location.id})'),
+                            );
+                          }).toList(),
+                          onChanged: (Location? newValue) {
+                            setState(() {
+                              _selectedLocation = newValue;
+                              _selectedAsset = null;
+                              _assetNameController.clear();
+                              print('Selected location: $_selectedLocation');
+                              _validateForm();
+                            });
+                          },
+                          validator: (value) {
+                            print('Location validator: value=$value');
+                            return value == null ? 'Location ID is required' : null;
+                          },
+                        ),
               const SizedBox(height: 15),
 
-              _buildDropdownField<Asset>(
-                value: _selectedAsset,
-                hintText: 'Select Asset ID',
-                labelText: 'Asset ID',
-                items: widget.availableAssets
-                    .where((asset) => _selectedLocation == null || asset.locationId == _selectedLocation!.id)
-                    .map((asset) {
-                  return DropdownMenuItem<Asset>(
-                    value: asset,
-                    child: Text('${asset.name} (${asset.id})'),
-                  );
-                }).toList(),
-                onChanged: (Asset? newValue) {
-                  setState(() {
-                    _selectedAsset = newValue;
-                    _assetNameController.text = newValue?.name ?? '';
-                  });
-                },
-                validator: (value) => value == null ? 'Asset ID is required' : null,
-              ),
+              _isLoadingAssets
+                  ? const Center(child: CircularProgressIndicator())
+                  : _availableAssets.isEmpty
+                      ? const Center(child: Text('No assets available'))
+                      : _buildDropdownField<Asset>(
+                          value: _selectedAsset,
+                          hintText: 'Select Asset ID',
+                          labelText: 'Asset ID',
+                          items: _availableAssets
+                              .where((asset) {
+                                if (_selectedLocation == null) return true;
+                                return asset.locationId == _selectedLocation!.id;
+                              })
+                              .map((asset) {
+                                return DropdownMenuItem<Asset>(
+                                  value: asset,
+                                  child: Text('${asset.name} (${asset.id})'),
+                                );
+                              })
+                              .toList(),
+                          onChanged: (Asset? newValue) {
+                            setState(() {
+                              _selectedAsset = newValue;
+                              _assetNameController.text = newValue?.name ?? '';
+                              print('Selected asset: $_selectedAsset');
+                              _validateForm();
+                            });
+                          },
+                          validator: (value) {
+                            print('Asset validator: value=$value');
+                            return value == null ? 'Asset ID is required' : null;
+                          },
+                        ),
               const SizedBox(height: 15),
 
               _buildTextField(
@@ -275,8 +495,10 @@ class _IncidentDetailState extends State<IncidentDetail> {
                 labelText: 'Description',
                 hintText: 'Enter incident description',
                 maxLines: 5,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Description is required' : null,
+                validator: (value) {
+                  print('Description validator: value=$value');
+                  return value == null || value.trim().isEmpty ? 'Description is required' : null;
+                },
               ),
               const SizedBox(height: 20),
 
@@ -306,12 +528,7 @@ class _IncidentDetailState extends State<IncidentDetail> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () async {
-                        final bool? confirmed = await _showCancelConfirmationDialog();
-                        if (confirmed == true) {
-                          Navigator.pop(context, false);
-                        }
-                      },
+                      onPressed: () => Navigator.pop(context),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.grey),
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -345,9 +562,73 @@ class _IncidentDetailState extends State<IncidentDetail> {
     );
   }
 
-  // --- REMOVED: _companycard() method is no longer needed here ---
+  Widget _companycard() {
+    final String ticketNumber = '#000001';
+    final String companyName = 'PT Dunia Persada';
+    final String assetCount = '0 Asset';
 
-  // Reuse these helper widgets from your original code (unchanged)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 6,
+              offset: Offset(0, 2),
+            )
+          ],
+        ),
+        child: Column(
+          children: [
+            const CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.apartment, size: 30, color: Colors.blue),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              ticketNumber,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              companyName,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.desktop_windows, color: Colors.white70, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  assetCount,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -431,60 +712,19 @@ class _IncidentDetailState extends State<IncidentDetail> {
           borderRadius: BorderRadius.circular(8.0),
           border: Border.all(color: Colors.grey[300]!),
         ),
-        child: file != null
-            ? Stack(
+        child: file == null
+            ? const Center(child: Icon(Icons.add_a_photo, size: 30, color: Colors.grey))
+            : Stack(
                 fit: StackFit.expand,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.file(file!, fit: BoxFit.cover),
-                  ),
+                  Image.file(file, fit: BoxFit.cover),
                   Positioned(
-                    top: 5,
-                    right: 5,
+                    top: 4,
+                    right: 4,
                     child: GestureDetector(
                       onTap: () => _removeImage(index),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.8),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.delete,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
+                      child: const Icon(Icons.close, color: Colors.red, size: 20),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 4.0),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)),
-                      ),
-                      child: Text(
-                        _imageLabels[index],
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.image, size: 40, color: Colors.grey[400]),
-                  const SizedBox(height: 5),
-                  Text(
-                    _imageLabels[index],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
                 ],
               ),
@@ -493,35 +733,14 @@ class _IncidentDetailState extends State<IncidentDetail> {
   }
 
   Widget _buildAddMoreButton() {
-    bool hasEmptySlot = _incidentImages.any((file) => file == null);
-    if (!hasEmptySlot) {
-      return const SizedBox.shrink();
-    }
-
-    return GestureDetector(
-      onTap: () {
-        int firstEmptyIndex = _incidentImages.indexWhere((file) => file == null);
-        if (firstEmptyIndex != -1) {
-          _showImageSourceSelection(firstEmptyIndex);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
-          border: Border.all(color: Colors.blueAccent, width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.add, size: 40, color: Colors.blueAccent),
-            const SizedBox(height: 5),
-            Text(
-              'Add More',
-              style: TextStyle(color: Colors.blueAccent, fontSize: 14),
-            ),
-          ],
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: const Center(
+        child: Icon(Icons.add, size: 30, color: Colors.grey),
       ),
     );
   }

@@ -1,8 +1,13 @@
+import 'package:asset_management/screen/admin/admin_incident.dart';
 import 'package:asset_management/screen/devices_screen.dart';
-import 'package:asset_management/screen/admin/incident.dart';
+import 'package:asset_management/screen/super_admin/SA_add_org.dart';
+import 'package:asset_management/screen/super_admin/SA_incident.dart';
+import 'package:asset_management/screen/super_admin/SA_register.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:asset_management/screen/models/user_role.dart';
 
+import '../../widgets/comingsoon.dart';
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -21,15 +26,25 @@ void showComingSoonPopup(BuildContext context) {
 }
 
 class SuperAdminHomePage extends StatelessWidget {
+  final String userName;
+  final String userEmail;
+  final UserRole userRole;
+
+  const SuperAdminHomePage({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+    required this.userRole,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background image
           Container(
-            height: MediaQuery.of(context).size.height * 0.33, // ~3/4 height of visible top area
+            height: MediaQuery.of(context).size.height * 0.33,
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/bg_image.png'),
@@ -37,8 +52,6 @@ class SuperAdminHomePage extends StatelessWidget {
               ),
             ),
           ),
-
-          // Scrollable foreground content
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,9 +73,9 @@ class SuperAdminHomePage extends StatelessWidget {
                           const SizedBox(width: 10),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text("user", style: TextStyle(fontSize: 18, color: Colors.white)),
-                              Text("user@user.com", style: TextStyle(color: Colors.white70)),
+                            children: [
+                              Text(userName, style: const TextStyle(fontSize: 18, color: Colors.white)),
+                              Text(userEmail, style: const TextStyle(color: Colors.white70)),
                             ],
                           ),
                         ],
@@ -70,45 +83,66 @@ class SuperAdminHomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 4),
-                _buildCompanyCard(), // overlay
+                _buildCompanyCard(),
                 const SizedBox(height: 15),
-
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: Text('Ticketing', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 12),
-
                 _customCard(
                   title: 'Incident',
-                  subtitle: 'Lorem ipsum',
+                  subtitle: '',
                   iconPath: 'assets/incident.png',
-                  onTap: (){
+                  onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AdminIncidentScreen()),
+                      MaterialPageRoute(builder: (context) => const SAIncidentScreen()),
                     );
                   },
                 ),
                 const SizedBox(height: 12),
-
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Devices', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('Devices & Organization', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 12),
-
                 _customCard(
-                  title: 'Devices',
-                  subtitle: 'Lorem ipsum',
+                  title: 'Devices & Organization',
+                  subtitle: '',
                   iconPath: 'assets/Devices.png',
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const DevicesScreen()),
+                      MaterialPageRoute(builder: (context) => const SuperAdminAddOrganization()),
                     );
+                  },
+                ),
+                const SizedBox(height: 24),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Text('Account', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 12),
+                _customCard(
+                  title: 'Register',
+                  subtitle: '',
+                  icon: Icons.person_add_alt_1,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SuperAdminRegister()), // Removed organizations parameter
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+                _customCard(
+                  title: 'User List',
+                  subtitle: '',
+                  icon: Icons.person,
+                  onTap: () {
+                    ComingSoonDialogs.showComingSoonPopup(context);
                   },
                 ),
                 const SizedBox(height: 24),
@@ -119,8 +153,6 @@ class SuperAdminHomePage extends StatelessWidget {
       ),
     );
   }
-
-
 
   Widget _buildCompanyCard() {
     return Padding(
@@ -134,32 +166,31 @@ class SuperAdminHomePage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 25,
                     backgroundImage: AssetImage('assets/company.png'),
                   ),
-                  SizedBox(width: 15),
+                  const SizedBox(width: 15),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      Text("user@user.com", style: TextStyle(color: Colors.grey)),
+                      const Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text(userEmail, style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  children: [
-    Text(
-      DateFormat("dd MMM yyyy").format(DateTime.now()),
-      style: TextStyle(fontWeight: FontWeight.bold),
-    ),
-    Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),
-  ],
-),
-
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    DateFormat("dd MMM").format(DateTime.now()),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),
+                ],
+              ),
             ],
           ),
         ),
@@ -171,8 +202,23 @@ class SuperAdminHomePage extends StatelessWidget {
     required String title,
     required String subtitle,
     String? iconPath,
+    IconData? icon,
     required VoidCallback onTap,
   }) {
+    assert(iconPath != null || icon != null, 'Either iconPath or icon must be provided to _customCard.');
+    assert(!(iconPath != null && icon != null), 'Cannot provide both iconPath and icon to _customCard. Choose one.');
+
+    Widget? iconWidget;
+    if (iconPath != null) {
+      iconWidget = SizedBox(
+        height: 48,
+        width: 48,
+        child: Image.asset(iconPath, fit: BoxFit.contain),
+      );
+    } else if (icon != null) {
+      iconWidget = Icon(icon, size: 48);
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -201,12 +247,7 @@ class SuperAdminHomePage extends StatelessWidget {
                 ],
               ),
             ),
-            if (iconPath != null)
-              SizedBox(
-                height: 48,
-                width: 48,
-                child: Image.asset(iconPath, fit: BoxFit.contain),
-              ),
+            if (iconWidget != null) iconWidget,
           ],
         ),
       ),

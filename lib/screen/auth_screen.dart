@@ -1,7 +1,10 @@
+import 'package:asset_management/screen/admin/admin_main_screen.dart';
+import 'package:asset_management/screen/main_screen.dart';
+import 'package:asset_management/screen/models/user_role.dart';
+import 'package:asset_management/screen/super_admin/SA_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for json decoding
-import 'main_screen.dart'; // Updated import to MainScreen
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -33,25 +36,51 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> loginUser() async {
+    // Trim the input to remove any leading/trailing whitespace
+    final login = _loginController.text.trim();
+    final password = _passwordController.text.trim();
+
     final response = await http.post(
-      Uri.parse('http://192.168.1.10/Skripsi/login.php'),
+      Uri.parse('http://192.168.1.9/Skripsi/login.php'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
-        'login': _loginController.text,
-        'password': _passwordController.text,
+        'login': login,
+        'password': password,
       },
     );
 
     final data = json.decode(response.body);
 
     if (data['status'] == 'success') {
+      String role = data['role'];
+      Widget targetScreen;
+
+      // Redirect based on role
+      if (role == 'customer') {
+        targetScreen = MainScreen(
+          username: login,
+          password: password,
+        );
+      } else if (role == 'admin') {
+        targetScreen = AdminMainScreen(
+          userName: login,
+          userRole: UserRole.admin,
+        );
+      } else if (role == 'super_admin') {
+        targetScreen = SuperAdminMainScreen(
+          userName: login,
+          userRole: UserRole.superAdmin,
+        );
+      } else {
+        // Handle unknown role
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unknown role: $role')),
+        );
+        return;
+      }
+
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => MainScreen(
-            username: _loginController.text,
-            password: _passwordController.text,
-          ),
-        ),
+        MaterialPageRoute(builder: (context) => targetScreen),
         (Route<dynamic> route) => false,
       );
     } else {

@@ -14,7 +14,7 @@ class AddLocationScreen extends StatefulWidget {
 }
 
 class _AddLocationScreenState extends State<AddLocationScreen> {
-  MapController? mapController; // Use MapController for flutter_map
+  MapController? mapController; 
   // Example: Monas, Jakarta. Use LatLng from latlong2
   final LatLng _center = const LatLng(-6.1753924, 106.8271528);
   // LatLng for the current center of the map, used for submission
@@ -40,7 +40,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
       String locationPICId = "budi";  // Fixed user_id
 
       final response = await http.post(
-        Uri.parse('http://192.168.1.10/Skripsi/add_location.php'), // Your server URL
+        Uri.parse('http://192.168.1.9/Skripsi/add_location.php'), // Your server URL
         body: {
           'organization_id': organizationId,  // Send organization_id
           'location_name': _locationNameController.text,

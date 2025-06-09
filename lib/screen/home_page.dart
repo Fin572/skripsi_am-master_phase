@@ -1,3 +1,4 @@
+import 'package:asset_management/screen/incident_ticket.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for json decoding
@@ -46,7 +47,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchUserData() async {
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.10/Skripsi/login.php'),
+        Uri.parse('http://192.168.1.9/Skripsi/login.php'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'login': widget.username,

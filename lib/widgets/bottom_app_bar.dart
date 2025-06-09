@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 class CustomBottomAppBar extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
-  final VoidCallback? onFabPressed;
 
   const CustomBottomAppBar({
     super.key,
     required this.selectedIndex,
-    required this.onTabSelected,
-    this.onFabPressed,
+    required this.onTabSelected, required String role, required Null Function() onFabPressed,
   });
 
   int _mapPageIndexToBottomIndex(int index) {
@@ -23,8 +21,8 @@ class CustomBottomAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomAppBar(
-      color: Colors.white,
-      shape: null,
+      shape: const CircularNotchedRectangle(), // 👈 supports FAB notch
+      notchMargin: 8.0,
       child: BottomNavigationBar(
         currentIndex: _mapPageIndexToBottomIndex(selectedIndex),
         onTap: (bottomIndex) {
@@ -45,7 +43,7 @@ class CustomBottomAppBar extends StatelessWidget {
             label: 'History',
           ),
           BottomNavigationBarItem(
-            icon: SizedBox.shrink(),
+            icon: SizedBox.shrink(), // Middle space for FAB
             label: '',
           ),
           BottomNavigationBarItem(

@@ -20,21 +20,26 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
   // This method will fetch locations from the database
   Future<void> _fetchLocations() async {
-    final response = await http.get(Uri.parse('http://192.168.1.10/Skripsi/get_location.php'));
+    final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/get_location.php')); // Changed IP to 192.168.1.10
+
+    print('Location API Response status: ${response.statusCode}');
+    print('Location API Response body: ${response.body}');
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
+      print('Parsed location data: $data');
       if (data['status'] == 'success') {
         setState(() {
           _locations = List<Map<String, dynamic>>.from(data['locations']);
-          _isLoading = false; // Stop loading once data is fetched
+          print('Fetched locations: $_locations'); // Added debug log
+          _isLoading = false;
         });
       } else {
         setState(() {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch locations')),
+          SnackBar(content: Text('Failed to fetch locations: ${data['message']}')),
         );
       }
     } else {
@@ -42,7 +47,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching locations')),
+        SnackBar(content: Text('Error fetching locations: ${response.statusCode}')),
       );
     }
   }
@@ -141,6 +146,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: _locations.map((location) {
+                            print('Rendering location: $location'); // Added debug log
                             return Card(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -156,14 +162,11 @@ class _DevicesScreenState extends State<DevicesScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            location['location_name'] ?? 'Unknown', // Fallback value
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
+                                            location['location_name']?.toString() ?? 'Unknown', // Added toString() for safety
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                           ),
                                           Text(
-                                            '#${location['location_id'] ?? 'Unknown'}', // Fallback value
+                                            '#${location['location_id']?.toString() ?? 'Unknown'}', // Added toString() for safety
                                             style: const TextStyle(fontSize: 14, color: Colors.grey),
                                           ),
                                           const SizedBox(height: 5),
@@ -202,7 +205,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                       ),
 
                       // Show no data if no locations found
-                      if (_locations.isEmpty)
+                      if (_locations.isEmpty && !_isLoading)
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.4,
                           child: Center(
@@ -272,6 +275,12 @@ class _DevicesScreenState extends State<DevicesScreen> {
                   ),
                 ),
               ),
+            ),
+
+          // Loading indicator
+          if (_isLoading)
+            const Center(
+              child: CircularProgressIndicator(),
             ),
         ],
       ),

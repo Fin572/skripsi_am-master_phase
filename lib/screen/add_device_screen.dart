@@ -1,15 +1,15 @@
-// lib/screens/add_device_screen.dart
 import 'dart:io';
+import 'package:asset_management/screen/asset_devices_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
-import 'package:asset_management/screen/models/location.dart'; // Reusing Location model
-import 'package:asset_management/widgets/company_info_card.dart'; // Reusing CompanyInfoCard
+import 'package:asset_management/screen/models/location.dart';
+import 'package:asset_management/widgets/company_info_card.dart';
 
 class AddDeviceScreen extends StatefulWidget {
-  // We need to pass available locations for the dropdown
-  final List<Location> availableLocations;
-
-  const AddDeviceScreen({Key? key, required this.availableLocations}) : super(key: key);
+  const AddDeviceScreen({Key? key, required List<Location> availableLocations})
+      : super(key: key);
 
   @override
   State<AddDeviceScreen> createState() => _AddDeviceScreenState();
@@ -22,19 +22,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   String? _selectedCategory;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _assetNameController = TextEditingController();
-  final TextEditingController _personInChargeController = TextEditingController();
-  final TextEditingController _personInChargePhoneController = TextEditingController();
+  final TextEditingController _locationPICController =
+      TextEditingController(text: 'budi');
 
-  final List<File?> _deviceImages = List.filled(5, null); // 4 specific views + 1 add more
+  final List<File?> _deviceImages = List.filled(4, null);
   final List<String> _imageLabels = [
     'Front View',
     'Rear View',
     'Top View',
-    'Bottom View',
-    'Other', // For the 'Add More' slot if it becomes dynamic
+    'Bottom View'
   ];
 
-  // Dummy categories for the dropdown
   final List<String> _availableCategories = [
     'CCTV',
     'Electronics',
@@ -43,26 +41,65 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     'Machinery',
   ];
 
+  List<Location> _availableLocations = [];
+
   @override
   void initState() {
     super.initState();
+    _fetchLocations();
     _quantityController.addListener(_validateForm);
     _assetNameController.addListener(_validateForm);
-    _personInChargeController.addListener(_validateForm);
-    _personInChargePhoneController.addListener(_validateForm);
+    _locationPICController.addListener(_validateForm);
   }
 
   @override
   void dispose() {
     _quantityController.dispose();
     _assetNameController.dispose();
-    _personInChargeController.dispose();
-    _personInChargePhoneController.dispose();
+    _locationPICController.dispose();
     super.dispose();
   }
 
+  Future<void> _fetchLocations() async {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/location_get.php'));
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success' && data['locations'] != null) {
+          setState(() {
+            _availableLocations = (data['locations'] as List)
+                .map((location) => Location(
+                      id: int.parse(location['location_id'].toString()),
+                      name: location['name'] as String,
+                    ))
+                .toList();
+            print('Available locations: $_availableLocations');
+          });
+        } else {
+          print('API error or no locations: ${data['message'] ?? 'No locations found'}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'No locations found')),
+          );
+        }
+      } else {
+        print('HTTP error: ${response.statusCode} - ${response.reasonPhrase}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load locations: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      print('Exception: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching locations: $e')),
+      );
+    }
+  }
+
   void _validateForm() {
-    setState(() {}); // Rebuilds to enable/disable submit button
+    setState(() {});
   }
 
   bool get _canSubmit {
@@ -70,34 +107,80 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     bool isCategorySelected = _selectedCategory != null;
     bool isQuantityFilled = _quantityController.text.isNotEmpty;
     bool isAssetNameFilled = _assetNameController.text.isNotEmpty;
-    bool isPersonInChargeFilled = _personInChargeController.text.isNotEmpty;
-    bool isPersonInChargePhoneFilled = _personInChargePhoneController.text.isNotEmpty;
+    bool isLocationPICFilled = _locationPICController.text.isNotEmpty;
     bool hasAtLeastOneImage = _deviceImages.any((file) => file != null);
 
     return isLocationSelected &&
         isCategorySelected &&
         isQuantityFilled &&
         isAssetNameFilled &&
-        isPersonInChargeFilled &&
-        isPersonInChargePhoneFilled &&
+        isLocationPICFilled &&
         hasAtLeastOneImage;
   }
 
-  void _submitDevice() {
+  Future<void> _submitDevice() async {
     if (_formKey.currentState!.validate() && _canSubmit) {
-      // Collect data and simulate submission
-      print('Submitting Device:');
-      print('Location: ${_selectedLocation!.name}');
-      print('Category: $_selectedCategory');
-      print('Quantity: ${_quantityController.text}');
-      print('Asset Name: ${_assetNameController.text}');
-      print('Person In Charge: ${_personInChargeController.text}');
-      print('Phone: ${_personInChargePhoneController.text}');
-      print('Images: ${_deviceImages.whereType<File>().map((f) => f.path).toList()}');
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://192.168.1.9/Skripsi/add_device.php'),
+      );
 
-      // TODO: Implement actual device submission logic (e.g., API call)
-      // On success, pop back to AssetDevicesScreen, possibly with a success flag
-      Navigator.pop(context, true); // Signal success to previous screen
+      request.fields['location_id'] = _selectedLocation!.id.toString();
+      request.fields['device_type'] = _selectedCategory!;
+      request.fields['locationPIC_id'] = _locationPICController.text;
+      request.fields['quantity'] = _quantityController.text;
+      request.fields['name'] = _assetNameController.text;
+
+      final List<String> imageFieldNames = ['front_view', 'rear_view', 'top_view', 'bottom_view'];
+      for (int i = 0; i < _deviceImages.length; i++) {
+        if (_deviceImages[i] != null) {
+          print('Uploading image for ${imageFieldNames[i]}: ${_deviceImages[i]!.path}');
+          request.files.add(await http.MultipartFile.fromPath(
+            imageFieldNames[i],
+            _deviceImages[i]!.path,
+            filename: '${imageFieldNames[i]}.jpg',
+          ));
+        }
+      }
+
+      // Log data yang akan dikirim
+      print('Submitting data: ${request.fields}');
+
+      try {
+        var response = await request.send();
+        var responseBody = await http.Response.fromStream(response);
+
+        print('Response status: ${response.statusCode}');
+        print('Response body: ${responseBody.body}');
+
+        if (response.statusCode == 200) {
+          var data = json.decode(responseBody.body);
+          if (data['status'] == 'success') {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AssetDevicesScreen(showSuccessPopup: true),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(data['message'])),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Server error')),
+          );
+        }
+      } catch (e) {
+        print('Exception during submission: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -158,7 +241,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 
-  // --- Helper for general text fields (can be reused) ---
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -187,7 +269,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         ),
         filled: readOnly,
         fillColor: readOnly ? Colors.grey[200] : null,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       ),
       validator: validator ??
           (value) {
@@ -199,7 +282,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 
-  // --- Helper for dropdown fields (can be reused) ---
   Widget _buildDropdownField<T>({
     required T? value,
     required String hintText,
@@ -222,7 +304,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           borderSide: BorderSide(color: Colors.blueAccent, width: 2.0),
           borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       ),
       items: items,
       onChanged: onChanged,
@@ -240,11 +323,11 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context, false); // Indicate cancellation if simply going back
+            Navigator.pop(context, false);
           },
         ),
         title: const Text(
-          'Add device', // Title from image
+          'Add device',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -253,39 +336,47 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          onChanged: _validateForm, // Validate on any form field change
+          onChanged: _validateForm,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Company Info Card
               const CompanyInfoCard(
-                ticketNumber: '#000001',
+                ticketNumber: '#000001', // Kembalikan ke nilai statis karena tidak diperlukan
                 companyName: 'PT Dunia Persada',
-                deviceCount: '0 Device', // As per image for initial state
+                deviceCount: '0 Device',
               ),
               const SizedBox(height: 20),
-
-              // Location ID Dropdown
-              _buildDropdownField<Location>(
-                value: _selectedLocation,
-                hintText: 'Select Location ID',
-                labelText: 'Location ID',
-                items: widget.availableLocations.map((location) {
-                  return DropdownMenuItem<Location>(
-                    value: location,
-                    child: Text('${location.id} - ${location.name}'),
-                  );
-                }).toList(),
-                onChanged: (Location? newValue) {
-                  setState(() {
-                    _selectedLocation = newValue;
-                  });
+              FutureBuilder<List<Location>>(
+                future: Future.value(_availableLocations),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError ||
+                      _availableLocations.isEmpty) {
+                    return const Text('No locations available');
+                  } else {
+                    return _buildDropdownField<Location>(
+                      value: _selectedLocation,
+                      hintText: 'Select Location ID',
+                      labelText: 'Location ID',
+                      items: _availableLocations.map((location) {
+                        return DropdownMenuItem<Location>(
+                          value: location,
+                          child: Text('${location.id} - ${location.name}'),
+                        );
+                      }).toList(),
+                      onChanged: (Location? newValue) {
+                        setState(() {
+                          _selectedLocation = newValue;
+                        });
+                      },
+                      validator:
+                          (value) => value == null ? 'Location ID is required' : null,
+                    );
+                  }
                 },
-                validator: (value) => value == null ? 'Location ID is required' : null,
               ),
               const SizedBox(height: 15),
-
-              // Category and Quantity in a Row
               Row(
                 children: [
                   Expanded(
@@ -304,12 +395,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                           _selectedCategory = newValue;
                         });
                       },
-                      validator: (value) => value == null ? 'Category is required' : null,
+                      validator:
+                          (value) => value == null ? 'Category is required' : null,
                     ),
                   ),
                   const SizedBox(width: 15),
                   SizedBox(
-                    width: 120, // Fixed width for Quantity field
+                    width: 120,
                     child: _buildTextField(
                       controller: _quantityController,
                       labelText: 'Quantity',
@@ -319,7 +411,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Required';
                         }
-                        if (int.tryParse(value) == null || int.parse(value) <= 0) {
+                        if (int.tryParse(value) == null ||
+                            int.parse(value) <= 0) {
                           return 'Invalid Qty';
                         }
                         return null;
@@ -329,37 +422,25 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                 ],
               ),
               const SizedBox(height: 15),
-
-              // Asset name
               _buildTextField(
                 controller: _assetNameController,
                 labelText: 'Asset name',
                 hintText: 'e.g., CCTV Unit 01',
-                validator: (value) => value == null || value.isEmpty ? 'Asset name is required' : null,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Asset name is required' : null,
               ),
               const SizedBox(height: 15),
-
-              // Person in charge
               _buildTextField(
-                controller: _personInChargeController,
-                labelText: 'Person in charge',
-                hintText: 'e.g., John Doe',
-                validator: (value) => value == null || value.isEmpty ? 'Person in charge is required' : null,
-              ),
-              const SizedBox(height: 15),
-
-              // Person in charge's phone number
-              _buildTextField(
-                controller: _personInChargePhoneController,
-                labelText: 'Person in charge\'s phone number',
-                keyboardType: TextInputType.phone,
-                hintText: 'e.g., +6281234567890',
-                validator: (value) => value == null || value.isEmpty ? 'Phone number is required' : null,
+                controller: _locationPICController,
+                labelText: 'Location PIC',
+                hintText: 'e.g., budi',
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Location PIC is required'
+                    : null,
               ),
               const SizedBox(height: 20),
-
-              // Upload Images Section
-              const Text('Upload Images*', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text('Upload Images*',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               GridView.builder(
                 shrinkWrap: true,
@@ -370,20 +451,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.2,
                 ),
-                itemCount: _deviceImages.length, // 5 slots from image
+                itemCount: _deviceImages.length,
                 itemBuilder: (context, index) {
                   return _buildImageUploadSlot(index);
                 },
               ),
               const SizedBox(height: 30),
-
-              // Cancel and Submit Buttons
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        // Pop back and signal cancellation
                         Navigator.pop(context, false);
                       },
                       style: OutlinedButton.styleFrom(
@@ -393,21 +471,24 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                      child: const Text('Cancel',
+                          style: TextStyle(color: Colors.grey)),
                     ),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _canSubmit ? _submitDevice : null, // Disable if not valid
+                      onPressed: _canSubmit ? _submitDevice : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _canSubmit ? Colors.blueAccent : Colors.grey,
+                        backgroundColor:
+                            _canSubmit ? Colors.blueAccent : Colors.grey,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      child: const Text('Submit', style: TextStyle(color: Colors.white)),
+                      child: const Text('Submit',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ),
                 ],
@@ -419,62 +500,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 
-  // --- Helper Widget for Image Upload Slots (adapted for this screen) ---
   Widget _buildImageUploadSlot(int index) {
-    // Labels specific to this "Add Device" screen
-    final List<String> currentImageLabels = [
-      'Front View',
-      'Rear View',
-      'Top View',
-      'Bottom View',
-      'Add More', // Last slot is for 'Add More'
-    ];
-
     final file = _deviceImages[index];
 
-    // For the 'Add More' slot (the last one)
-    if (index == _deviceImages.length - 1) {
-      if (_deviceImages.sublist(0, _deviceImages.length - 1).every((img) => img != null)) {
-        // If all specific slots are filled, don't show "Add More"
-        return const SizedBox.shrink();
-      }
-      return GestureDetector(
-        onTap: () {
-          // If a slot before the last one is empty, use that
-          int targetIndex = _deviceImages.sublist(0, _deviceImages.length -1).indexWhere((img) => img == null);
-          if (targetIndex != -1) {
-             _showImageSourceSelection(targetIndex);
-          } else {
-             // If all specific slots are full, you might want to show a message or do nothing
-             // In this case, the `_deviceImages` only has 5 slots as per current design (4 + 1 for "Add More" concept)
-             // If you want more than 4, _deviceImages list size needs to be larger than 5 and logic adjusted
-             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('All specific image slots are filled.')),
-             );
-          }
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8.0),
-            border: Border.all(color: Colors.blueAccent, width: 2),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.add, size: 40, color: Colors.blueAccent),
-              const SizedBox(height: 5),
-              Text(
-                currentImageLabels[index], // "Add More"
-                style: TextStyle(color: Colors.blueAccent, fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // For specific view slots (Front, Rear, Top, Bottom)
     return GestureDetector(
       onTap: () {
         if (file == null) _showImageSourceSelection(index);
@@ -519,10 +547,11 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 4.0),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)),
+                        borderRadius:
+                            const BorderRadius.vertical(bottom: Radius.circular(8.0)),
                       ),
                       child: Text(
-                        currentImageLabels[index],
+                        _imageLabels[index],
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
@@ -536,7 +565,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   Icon(Icons.image, size: 40, color: Colors.grey[400]),
                   const SizedBox(height: 5),
                   Text(
-                    currentImageLabels[index],
+                    _imageLabels[index],
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),
@@ -545,4 +574,11 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       ),
     );
   }
+}
+
+class Location {
+  final int id;
+  final String name;
+
+  Location({required this.id, required this.name});
 }

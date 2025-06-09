@@ -1,18 +1,15 @@
-// lib/screen/models/asset.dart
-// No need to import location.dart here unless Asset *contains* a Location object directly
-// If it only references locationId, then location.dart is not strictly needed here.
-
-class Asset { // This class now represents a specific device/asset with all its details
-  final String id; // Device ID, e.g., #001001
-  final String name; // e.g., "CCTV"
-  final String category; // e.g., "Electronics"
-  final String locationId; // The ID of the location it belongs to
-  final String locationInfo; // e.g., "Jl Pertiwi 12"
-  final double latitude; // Coordinate latitude
-  final double longitude; // Coordinate longitude
-  final String personInCharge; // e.g., "Danny"
-  final String phoneNumber; // e.g., "081208120812"
-  final String? barcodeData; // Optional: data for the barcode
+// lib/screens/models/asset.dart
+class Asset {
+  final String id;
+  final String name;
+  final String category;
+  final String locationId;
+  final String locationInfo;
+  final double latitude;
+  final double longitude;
+  final String personInCharge;
+  final String phoneNumber;
+  final String barcodeData;
 
   Asset({
     required this.id,
@@ -24,6 +21,6 @@ class Asset { // This class now represents a specific device/asset with all its 
     required this.longitude,
     required this.personInCharge,
     required this.phoneNumber,
-    this.barcodeData, // Made optional
+    this.barcodeData = '',
   });
 }
