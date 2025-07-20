@@ -20,7 +20,7 @@ class _AddOrganizationDialogState extends State<AddOrganizationDialog> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.9/skripsi/add_organization.php'),
+        Uri.parse('http://assetin.my.id/skripsi/add_organization.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'organization_name': name}),
       );

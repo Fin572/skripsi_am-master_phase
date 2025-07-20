@@ -39,7 +39,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
     });
     try {
       final response = await http
-          .get(Uri.parse('http://192.168.1.9/skripsi/get_incidents.php'))
+          .get(Uri.parse('http://assetin.my.id/skripsi/get_incidents.php'))
           .timeout(const Duration(seconds: 10));
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');

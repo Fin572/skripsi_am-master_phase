@@ -42,7 +42,7 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
   }
 
   Future<void> _approveIncident(String newStatusSa) async {
-    final url = Uri.parse('http://192.168.1.9/skripsi/approve_incident_sa.php');
+    final url = Uri.parse('http://assetin.my.id/skripsi/approve_incident_sa.php');
     final incidentId = widget.incident['incident_id'];
 
     try {

@@ -55,7 +55,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
 
   Future<void> _fetchLocations() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/location_get.php')).timeout(
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/location_get.php')).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           print('Location API request timed out');
@@ -124,7 +124,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
 
   Future<void> _fetchAssets() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/devices_get.php')).timeout(
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/devices_get.php')).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           print('Devices API request timed out');
@@ -225,7 +225,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     if (_formKey.currentState!.validate() && _canSubmit) {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://192.168.1.9/Skripsi/add_incident.php'),
+        Uri.parse('http://assetin.my.id/skripsi/add_incident.php'),
       );
 
       // Log all fields before sending

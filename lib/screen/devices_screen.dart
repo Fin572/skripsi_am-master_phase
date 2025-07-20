@@ -20,7 +20,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
   // This method will fetch locations from the database
   Future<void> _fetchLocations() async {
-    final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/get_location.php')); // Changed IP to 192.168.1.10
+    final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_location.php')); // Changed IP to 192.168.1.10
 
     print('Location API Response status: ${response.statusCode}');
     print('Location API Response body: ${response.body}');
@@ -162,7 +162,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            location['location_name']?.toString() ?? 'Unknown', // Added toString() for safety
+                                            location['name']?.toString() ?? 'Unknown', // Added toString() for safety
                                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                           ),
                                           Text(

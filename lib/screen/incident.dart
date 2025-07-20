@@ -6,6 +6,9 @@ import 'package:asset_management/screen/models/incident_view_screen.dart'; // Im
 import 'package:asset_management/screen/models/location.dart';
 import 'package:asset_management/screen/models/asset.dart';
 import 'package:asset_management/screen/models/incident_ticket.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart'; // For date formatting
 
 class Incident extends StatefulWidget {
   const Incident({Key? key}) : super(key: key);
@@ -18,7 +21,20 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
-  final List<IncidentTicket> _submittedTickets = [];
+  List<IncidentTicket> _assignedTickets = [];
+  List<IncidentTicket> _onProgressTickets = [];
+  List<IncidentTicket> _rejectedTickets = [];
+  List<IncidentTicket> _doneTickets = [];
+
+  bool _isLoadingAssigned = true;
+  bool _isLoadingOnProgress = true;
+  bool _isLoadingRejected = true;
+  bool _isLoadingDone = true;
+
+  String _errorAssigned = '';
+  String _errorOnProgress = '';
+  String _errorRejected = '';
+  String _errorDone = '';
 
   final List<Location> _mockLocations = [
     // Location(id: 'LOC001', name: 'Kantor Pusat Cakung', address: 'Jl. Pertiwi 12', detail: 'Disebelah SPBU', personInCharge: 'Reina', phoneNumber: '081208120812'),
@@ -89,13 +105,16 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
     ),
   ];
 
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       setState(() {});
+    });
+    _fetchIncidentData();
+    _searchController.addListener(() {
+      setState(() {}); // Rebuild for search filter
     });
   }
 
@@ -106,26 +125,128 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
+  Future<void> _fetchIncidentData() async {
+    await Future.wait([
+      _fetchTickets('assigned', _assignedTickets, (val) => setState(() { _isLoadingAssigned = val; }), (val) => setState(() { _errorAssigned = val; })),
+      _fetchTickets('on_progress', _onProgressTickets, (val) => setState(() { _isLoadingOnProgress = val; }), (val) => setState(() { _errorOnProgress = val; })),
+      _fetchTickets('rejected', _rejectedTickets, (val) => setState(() { _isLoadingRejected = val; }), (val) => setState(() { _errorRejected = val; })),
+      _fetchTickets('done', _doneTickets, (val) => setState(() { _isLoadingDone = val; }), (val) => setState(() { _errorDone = val; })),
+    ]);
+  }
+
+  Future<void> _fetchTickets(String statusParam, List<IncidentTicket> ticketList, ValueSetter<bool> setLoading, ValueSetter<String> setError) async {
+    try {
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/incident_get.php?status=$statusParam'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          ticketList.clear();
+          ticketList.addAll((data['data'] as List).map((item) {
+            // Parse and format date if needed
+            DateTime parsedDate = DateTime.parse(item['incident_date']);
+            String formattedDate = DateFormat('dd MMM yyyy HH:mm:ss').format(parsedDate) + ' WIB';
+
+            // Map to IncidentTicket model
+            // Assuming Asset and Location are fetched or mocked; adjust as per your models
+            // For simplicity, creating dummy Asset and Location based on IDs
+            final asset = _mockAssets.firstWhere(
+              (a) => a.id == (item['asset_id']?.toString() ?? ''),
+              orElse: () => Asset(
+                id: item['asset_id']?.toString() ?? '0',
+                name: item['title'] ?? 'Unknown Asset',
+                locationId: item['location_id']?.toString() ?? '0',
+                category: '', // Fill if available
+                locationInfo: '', 
+                latitude: 0.0,
+                longitude: 0.0,
+                personInCharge: '',
+                phoneNumber: '',
+                barcodeData: '',
+              ),
+            );
+
+            final location = _mockLocations.firstWhere(
+              (l) => l.id == (item['location_id']?.toString() ?? ''),
+              orElse: () => Location(
+                id: item['location_id']?.toString() ?? '0',
+                name: 'Unknown Location',
+              ),
+            );
+
+            return IncidentTicket(
+              ticketId: item['incident_id']?.toString() ?? '0',
+              asset: asset,
+              location: location,
+              status: _mapStatusFromDb(item['status'] ?? '', statusParam),
+              description: item['description'] ?? '',
+              submissionTime: parsedDate,
+              imageUrls: [], // Adjust if you fetch image URLs from before_photos/after_photos
+              // Add other required fields if any
+            );
+          }).toList());
+          setLoading(false);
+        } else {
+          setError(data['message'] ?? 'Failed to load data');
+          setLoading(false);
+        }
+      } else {
+        setError('Server error: ${response.statusCode}');
+        setLoading(false);
+      }
+    } catch (e) {
+      setError('Error: $e');
+      setLoading(false);
+    }
+  }
+
+  String _mapStatusFromDb(String dbStatus, String param) {
+    // Map DB status to app status
+    if (param == 'assigned') return 'Assigned';
+    if (param == 'on_progress') return 'On progress';
+    if (param == 'rejected') return 'Rejected';
+    if (param == 'done') return 'Done';
+    return dbStatus;
+  }
+
   List<IncidentTicket> _getFilteredTickets() {
-    String currentStatus = '';
+    List<IncidentTicket> tickets = [];
     switch (_tabController.index) {
       case 0:
-        currentStatus = 'Assigned';
+        tickets = _assignedTickets;
         break;
       case 1:
-        currentStatus = 'On progress';
+        tickets = _onProgressTickets;
         break;
       case 2:
-        currentStatus = 'Rejected';
+        tickets = _rejectedTickets;
         break;
       case 3:
-        currentStatus = 'Done';
+        tickets = _doneTickets;
         break;
     }
 
-    return _submittedTickets
-        .where((ticket) => ticket.status == currentStatus)
-        .toList();
+    final search = _searchController.text.toLowerCase();
+    return tickets.where((ticket) => ticket.ticketId.toLowerCase().contains(search) || ticket.asset.name.toLowerCase().contains(search)).toList();
+  }
+
+  Widget _buildTabContent(bool isLoading, String error, List<IncidentTicket> tickets) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (error.isNotEmpty) {
+      return Center(child: Text(error));
+    }
+    if (tickets.isEmpty) {
+      return _buildEmptyState();
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      itemCount: tickets.length,
+      itemBuilder: (context, index) {
+        final ticket = tickets[index];
+        return _buildTicketCard(ticket);
+      },
+    );
   }
 
   void _showDeletionConfirmationPopup(BuildContext context) {
@@ -213,8 +334,6 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    List<IncidentTicket> filteredTickets = _getFilteredTickets();
-
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -283,25 +402,19 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    // This will trigger a rebuild and re-filter if you implement actual search
-                  });
-                },
               ),
             ),
           ),
           Expanded(
-            child: filteredTickets.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    itemCount: filteredTickets.length,
-                    itemBuilder: (context, index) {
-                      final ticket = filteredTickets[index];
-                      return _buildTicketCard(ticket);
-                    },
-                  ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTabContent(_isLoadingAssigned, _errorAssigned, _getFilteredTickets()),
+                _buildTabContent(_isLoadingOnProgress, _errorOnProgress, _getFilteredTickets()),
+                _buildTabContent(_isLoadingRejected, _errorRejected, _getFilteredTickets()),
+                _buildTabContent(_isLoadingDone, _errorDone, _getFilteredTickets()),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(bottom: 20.0),
@@ -319,10 +432,8 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
 
                 if (result is IncidentTicket) {
                   setState(() {
-                    _submittedTickets.add(result);
-                    if (result.status == 'Assigned' && _tabController.index != 0) {
-                      _tabController.animateTo(0);
-                    }
+                    // Refresh data after adding new ticket
+                    _fetchIncidentData();
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -362,6 +473,7 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
             width: 100,
           ),
           const SizedBox(height: 20),
+          const Text('No data'),
         ],
       ),
     );
@@ -423,9 +535,7 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                     );
 
                     if (result is String) { // Check if a String (ticketId) was returned, indicating deletion
-                      setState(() {
-                        _submittedTickets.removeWhere((t) => t.ticketId == result);
-                      });
+                      _fetchIncidentData(); // Refresh data after deletion
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Ticket $result has been deleted.'),

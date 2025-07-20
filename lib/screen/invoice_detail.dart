@@ -36,7 +36,7 @@ class _InvoicedetailState extends State<Invoicedetail> {
 
   Future<void> _fetchInvoiceDetail() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/skripsi/get_invoices_detail.php?incident_id=${widget.incident_id}'));
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_invoices_detail.php?incident_id=${widget.incident_id}'));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success']) {
@@ -68,7 +68,7 @@ class _InvoicedetailState extends State<Invoicedetail> {
     setState(() => isLoading = true);
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.9/skripsi/update_payment.php'),
+        Uri.parse('http://192.168.1.3/skripsi/update_payment.php'),
         body: {'incident_id': widget.incident_id.toString()},
       );
       if (response.statusCode == 200) {

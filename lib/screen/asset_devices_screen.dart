@@ -46,7 +46,7 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
     });
 
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/get_asset.php?action=get_categories'));
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_asset.php?action=get_categories'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {

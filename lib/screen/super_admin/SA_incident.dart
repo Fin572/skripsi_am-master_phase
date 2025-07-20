@@ -38,7 +38,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
     });
     try {
       final response = await http
-          .get(Uri.parse('http://192.168.1.9/skripsi/get_incidents.php'))
+          .get(Uri.parse('http://assetin.my.id/skripsi/get_incidents.php'))
           .timeout(const Duration(seconds: 10));
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -100,7 +100,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
   }
 
   Future<void> _updateIncidentStatus(int incidentId, String newStatus) async {
-    final url = Uri.parse('http://192.168.1.9/skripsi/status_sa.php');
+    final url = Uri.parse('http://assetin.my.id/skripsi/status_sa.php');
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},

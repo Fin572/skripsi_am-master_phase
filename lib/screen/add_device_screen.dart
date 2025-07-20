@@ -62,7 +62,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   Future<void> _fetchLocations() async {
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/Skripsi/location_get.php'));
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/location_get.php'));
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
@@ -122,7 +122,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     if (_formKey.currentState!.validate() && _canSubmit) {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://192.168.1.9/Skripsi/add_device.php'),
+        Uri.parse('http://assetin.my.id/skripsi/add_device.php'),
       );
 
       request.fields['location_id'] = _selectedLocation!.id.toString();

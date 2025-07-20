@@ -34,7 +34,7 @@ class _InvoiceState extends State<Invoice> with SingleTickerProviderStateMixin {
   Future<void> _fetchInvoices() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.9/skripsi/get_invoices.php')).timeout(const Duration(seconds: 10));
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_invoices.php')).timeout(const Duration(seconds: 10));
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 

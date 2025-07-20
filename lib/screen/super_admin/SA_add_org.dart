@@ -39,7 +39,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.9/skripsi/fetch_organizations.php'),
+        Uri.parse('http://assetin.my.id/skripsi/fetch_organizations.php'),
       );
 
       if (response.statusCode == 200) {
@@ -108,7 +108,7 @@ Future<void> _deleteOrganizations() async {
 
   try {
     final response = await http.post(
-      Uri.parse('http://192.168.1.9/skripsi/delete_organization.php'),
+      Uri.parse('http://assetin.my.id/skripsi/delete_organization.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'organization_ids': _selectedOrganizations.toList()}),
     );

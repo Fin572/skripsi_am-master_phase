@@ -39,7 +39,7 @@ class _AssetCategoryDetailScreenState extends State<AssetCategoryDetailScreen> {
 
     try {
       final response = await http.get(Uri.parse(
-          'http://192.168.1.9/Skripsi/get_asset.php?action=get_devices_by_category&category=${Uri.encodeComponent(widget.categoryName)}'));
+          'http://assetin.my.id/skripsi/get_asset.php?action=get_devices_by_category&category=${Uri.encodeComponent(widget.categoryName)}'));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {

@@ -41,7 +41,7 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = _passwordController.text.trim();
 
     final response = await http.post(
-      Uri.parse('http://192.168.1.9/Skripsi/login.php'),
+      Uri.parse('http://assetin.my.id/skripsi/login.php'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
         'login': login,
