@@ -1,3 +1,4 @@
+// admin_profile.dart
 import 'package:asset_management/screen/auth_screen.dart';
 import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole
 import 'package:flutter/material.dart';
@@ -46,18 +47,30 @@ class _ProfilePageState extends State<AdminProfile> {
 
   @override
   Widget build(BuildContext context) {
+    const double consistentAppBarHeight = 100.0; // Standard height for image app bars
+
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 80,
-        title: const Text(
-          "Profile",
-          style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(consistentAppBarHeight),
+        child: Stack(
+          children: [
+            // Background image that covers the entire PreferredSize area
+            Image.asset(
+              'assets/bg_image.png',
+              height: consistentAppBarHeight,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            SafeArea(
+              child: Center(
+                  child: const Text(
+                    "Profile",
+                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+            ),
+          ],
         ),
-        flexibleSpace: const Image(
-          image: AssetImage('assets/bg_image.png'),
-          fit: BoxFit.fill,
-        ),
-        backgroundColor: Colors.transparent,
       ),
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Column(

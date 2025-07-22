@@ -1,3 +1,4 @@
+// admin_invoice_detail.dart
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
@@ -21,7 +22,7 @@ class _AdminInvoicedetailState extends State<AdminInvoiceDetail> {
   Widget build(BuildContext context) {
     bool isPaid = widget.status == 'Paid';
     // Define the consistent AppBar height
-    const double consistentAppBarHeight = 95.0;
+    const double consistentAppBarHeight = 100.0; // Changed from 95.0 to 100.0
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
