@@ -302,7 +302,7 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
             TextButton(
               onPressed: () {
                 // Create a User object from the map data BEFORE navigating
-                final user = User(
+                final customer = User(
                   name: userMap['name']!,
                   email: userMap['email']!,
                   companyName: userMap['companyName']!,

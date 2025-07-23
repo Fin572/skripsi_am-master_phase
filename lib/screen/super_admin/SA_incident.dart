@@ -1,10 +1,11 @@
+// SA_incident.dart
 import 'dart:async';
-import 'dart:io';
+import 'dart:io'; // Kept, although not directly used for base64 now in _buildIncidentListItem itself
 
 import 'package:asset_management/screen/super_admin/SA_incident_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:http/http.dart' as http; // Preserved
+import 'dart:convert'; // Preserved
 import 'package:intl/intl.dart';
 
 class SAIncidentScreen extends StatefulWidget {
@@ -16,10 +17,12 @@ class SAIncidentScreen extends StatefulWidget {
 
 class _SAIncidentScreenState extends State<SAIncidentScreen> {
   int _selectedTabIndex = 0;
+  final TextEditingController _searchController = TextEditingController(); // Added
+  String _searchQuery = ''; // Added
   List<Map<String, String>> _incidentData = [];
-  bool _isLoading = true;
+  bool _isLoading = true; // Preserved
 
-  final List<String> _statusCategories = [
+  final List<String> _mainStatusCategories = [ // Changed name for clarity with subStatus
     'Assigned',
     'On Progress',
     'Rejected',
@@ -29,10 +32,16 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchIncidents();
+    _fetchIncidents(); // Preserved
   }
 
-  Future<void> _fetchIncidents() async {
+  @override
+  void dispose() {
+    _searchController.dispose(); // Dispose the controller
+    super.dispose();
+  }
+
+  Future<void> _fetchIncidents() async { // Preserved
     setState(() {
       _isLoading = true;
     });
@@ -73,10 +82,11 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
               'companyInfo': '${item['organization_name']?.toString() ?? 'Unknown Organization'} - #${item['incident_id']?.toString() ?? ''}',
               'date': formattedDate,
               'status': item['status']?.toString() ?? 'Unknown',
+              'subStatus': item['sub_status']?.toString() ?? '', // Added sub_status from backend
               'location': item['location_name']?.toString() ?? 'Location #${item['location_id']?.toString() ?? 'Unknown'}',
               'ticketId': '#${item['incident_id']?.toString() ?? ''}',
               'description': item['description']?.toString() ?? 'No description provided',
-              'imageUrls': item['before_photos']?.toString() ?? '',
+              'before_photos': item['before_photos']?.toString() ?? '',
               'value': item['value']?.toString() ?? '',
               'pic_id': item['pic_id']?.toString() ?? '',
               'after_photos': item['after_photos']?.toString() ?? '',
@@ -99,7 +109,8 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
     }
   }
 
-  Future<void> _updateIncidentStatus(int incidentId, String newStatus) async {
+  // _updateIncidentStatus is not directly used by this screen in the new flow, but preserved if backend needs it.
+  Future<void> _updateIncidentStatus(int incidentId, String newStatus) async { // Preserved
     final url = Uri.parse('http://assetin.my.id/skripsi/status_sa.php');
     final response = await http.post(
       url,
@@ -119,40 +130,83 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
     }
   }
 
-  void _handleIncidentUpdate(Map<String, dynamic> updatedIncident) {
+  void _handleIncidentUpdate(Map<String, String> updatedIncident) { // Modified to handle NEW UI status logic
     setState(() {
       final int index = _incidentData.indexWhere((incident) => incident['ticketId'] == updatedIncident['ticketId']);
       if (index != -1) {
-        _incidentData[index] = updatedIncident.cast<String, String>(); // Cast to Map<String, String>
-        final String newStatus = updatedIncident['status']!;
-        print('Updated incident status: $newStatus');
-        print('Current incident data: $_incidentData');
-
-        int newTabIndex = _statusCategories.indexWhere((status) => status.toLowerCase() == newStatus.toLowerCase());
-        if (newTabIndex != -1) {
-          _selectedTabIndex = newTabIndex;
-          print('Switched to tab index: $_selectedTabIndex');
+        // If the status is 'Approved by SA', remove the incident from the local list.
+        // The backend `_fetchIncidents` will confirm this.
+        if (updatedIncident['status'] == 'Approved by SA') {
+          _incidentData.removeAt(index);
+          ScaffoldMessenger.of(context).showSnackBar( // Show snackbar for archiving
+            SnackBar(
+              content: Text('Incident ${updatedIncident['title']} has been moved to archive.'),
+              backgroundColor: Colors.green,
+            ),
+          );
         } else {
-          print('Status $newStatus not found in _statusCategories');
+          // Otherwise, just update the incident in the local list
+          _incidentData[index] = updatedIncident;
         }
-      } else {
-        print('Incident with ticketId ${updatedIncident['ticketId']} not found in _incidentData');
+
+        // After updating, switch to the tab relevant to the incident's new primary status
+        // Also handling subStatus changes (e.g., Rejected by Admin -> Rejected, Completed by Admin -> Completed)
+        final String newMainStatus = updatedIncident['status']!;
+        if (_mainStatusCategories.contains(newMainStatus)) {
+          _selectedTabIndex = _mainStatusCategories.indexOf(newMainStatus);
+        } else if (newMainStatus.toLowerCase().contains('rejected')) { // If it's a rejected sub-status like "Rejected by Admin"
+            _selectedTabIndex = _mainStatusCategories.indexOf('Rejected');
+        } else if (newMainStatus.toLowerCase().contains('completed')) { // If it's a completed sub-status like "Completed by Admin"
+            _selectedTabIndex = _mainStatusCategories.indexOf('Completed');
+        }
+
+        // Clear search query after an update, or re-filter if desired
+        _searchController.clear();
+        _searchQuery = '';
       }
     });
 
-    _fetchIncidents(); // Refresh data from database
+    _fetchIncidents(); // Always refresh data from database after an update
+  }
+
+  // Helper to filter incidents based on the selected main tab AND search query
+  List<Map<String, String>> _getFilteredIncidents() { // Added helper
+    final String selectedMainCategory = _mainStatusCategories[_selectedTabIndex];
+    String query = _searchQuery.toLowerCase(); // Use the current search query
+
+    return _incidentData.where((incident) {
+      final String incidentStatus = incident['status']!;
+      final String incidentSubStatus = incident['subStatus'] ?? ''; // Safely get subStatus
+      final String title = incident['title']!.toLowerCase();
+      final String companyInfo = incident['companyInfo']!.toLowerCase();
+      final String ticketId = incident['ticketId']!.toLowerCase();
+
+      bool matchesStatus = false;
+      if (selectedMainCategory == 'Assigned' || selectedMainCategory == 'On Progress') {
+        matchesStatus = (incidentStatus == selectedMainCategory);
+      } else if (selectedMainCategory == 'Rejected') {
+        // Only show rejected incidents that are NOT 'Approved by SA' (i.e., awaiting review or freshly rejected)
+        matchesStatus = (incidentStatus == 'Rejected' && incidentSubStatus != 'Approved by SA');
+      } else if (selectedMainCategory == 'Completed') {
+        // Only show completed incidents that are NOT 'Approved by SA'
+        matchesStatus = (incidentStatus == 'Completed' && incidentSubStatus != 'Approved by SA');
+      }
+
+      // Check if the incident matches the search query across multiple fields
+      bool matchesSearch = query.isEmpty ||
+                           title.contains(query) ||
+                           companyInfo.contains(query) ||
+                           ticketId.contains(query);
+
+      return matchesStatus && matchesSearch;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final String currentStatus = _statusCategories[_selectedTabIndex];
-    final List<Map<String, String>> filteredIncidents = _incidentData.where((incident) {
-      return (incident['status'] ?? '').toLowerCase() == currentStatus.toLowerCase();
-    }).toList();
-    print('Current status: $currentStatus');
-    print('Filtered incidents: $filteredIncidents');
+    final List<Map<String, String>> filteredIncidents = _getFilteredIncidents(); // Use filtered incidents
 
-    const double consistentAppBarHeight = 95.0;
+    const double consistentAppBarHeight = 100.0; // Consistent with NEW UI
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -173,7 +227,9 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
                     ),
                     const SizedBox(width: 16),
                     const Text(
@@ -188,97 +244,110 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator()) // Preserved loading indicator
           : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 48,
-                    color: Colors.white,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: List.generate(_statusCategories.length, (index) => _buildTabItem(index, _statusCategories[index])),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 255, 255, 255),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              // Wrap with a GestureDetector to unfocus when tapping outside text field
+              child: GestureDetector( // Added
+                onTap: () { // Added
+                  FocusScope.of(context).unfocus(); // Added
+                }, // Added
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 48,
+                      color: Colors.white,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: List.generate(_mainStatusCategories.length, (index) => _buildTabItem(index, _mainStatusCategories[index])), // Use _mainStatusCategories
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Total Incident',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const Text(
-                                  'Period 1 Jan 2025 - 30 Dec 2025',
-                                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    _buildCountItem('Total', _incidentData.length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Assigned', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'assigned').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('On Progress', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'on progress').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Rejected', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'rejected').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Completed', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'completed').length.toString()),
-                                  ],
-                                ),
-                              ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: TextField(
+                        controller: _searchController, // Assigned controller
+                        autofocus: false, // Prevent autofocus
+                        decoration: InputDecoration(
+                          hintText: 'Search',
+                          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                          filled: true,
+                          fillColor: const Color.fromARGB(255, 255, 255, 255),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        ),
+                        onChanged: (value) { // Added onChanged
+                          setState(() {
+                            _searchQuery = value; // Update the search query state
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Total Incident',
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  ),
+                                  const Text(
+                                    'Period 1 Jan 2025 - 30 Dec 2025',
+                                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _buildCountItem('Total', _incidentData.length.toString()),
+                                      const SizedBox(width: 8),
+                                      _buildCountItem('Assigned', _incidentData.where((i) => i['status'] == 'Assigned').length.toString()),
+                                      const SizedBox(width: 8),
+                                      _buildCountItem('On Progress', _incidentData.where((i) => i['status'] == 'On Progress').length.toString()),
+                                      const SizedBox(width: 8),
+                                      _buildCountItem('Rejected', _incidentData.where((i) => i['status'] == 'Rejected' && (i['subStatus'] ?? '') != 'Approved by SA').length.toString()), // Conditional count
+                                      const SizedBox(width: 8),
+                                      _buildCountItem('Completed', _incidentData.where((i) => i['status'] == 'Completed' && (i['subStatus'] ?? '') != 'Approved by SA').length.toString()), // Conditional count
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Data(${filteredIncidents.length})',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        filteredIncidents.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: filteredIncidents.length,
-                                itemBuilder: (context, index) {
-                                  final incident = filteredIncidents[index];
-                                  return _buildIncidentListItem(incident);
-                                },
-                              ),
-                      ],
+                          const SizedBox(height: 20),
+                          Text(
+                            'Data(${filteredIncidents.length})',
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+                          filteredIncidents.isEmpty
+                              ? _buildEmptyState()
+                              : ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: filteredIncidents.length,
+                                  itemBuilder: (context, index) {
+                                    final incident = filteredIncidents[index];
+                                    return _buildIncidentListItem(incident);
+                                  },
+                                ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
     );
@@ -290,6 +359,8 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
       onTap: () {
         setState(() {
           _selectedTabIndex = index;
+          _searchController.clear(); // Clear search when switching tabs
+          _searchQuery = '';
         });
       },
       child: Container(
@@ -297,7 +368,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? Colors.blueAccent : Colors.transparent,
+              color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.transparent,
               width: 2.0,
             ),
           ),
@@ -305,7 +376,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? Colors.blueAccent : Colors.grey[600],
+            color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey[600],
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -347,29 +418,59 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
   }
 
   Widget _buildIncidentListItem(Map<String, String> incident) {
-    Color chipColor;
-    Color chipTextColor;
-    switch (incident['status']?.toLowerCase()) {
-      case 'assigned':
-        chipColor = Colors.blue.withOpacity(0.1);
-        chipTextColor = Colors.blue;
+    String primaryStatus = incident['status']!;
+    String subStatus = incident['subStatus'] ?? ''; // Get subStatus
+
+    // Determine colors for primary status chip
+    Color primaryChipColor;
+    Color primaryChipTextColor;
+    switch (primaryStatus) {
+      case 'Assigned':
+        primaryChipColor = Colors.blue.withOpacity(0.1);
+        primaryChipTextColor = Colors.blue;
         break;
-      case 'on progress':
-        chipColor = Colors.orange.withOpacity(0.1);
-        chipTextColor = Colors.orange;
+      case 'On Progress':
+        primaryChipColor = Colors.orange.withOpacity(0.1);
+        primaryChipTextColor = Colors.orange;
         break;
-      case 'rejected':
-        chipColor = Colors.red.withOpacity(0.1);
-        chipTextColor = Colors.red;
+      case 'Rejected':
+        primaryChipColor = Colors.red.withOpacity(0.1);
+        primaryChipTextColor = Colors.red;
         break;
-      case 'completed':
-        chipColor = Colors.green.withOpacity(0.1);
-        chipTextColor = Colors.green;
+      case 'Completed':
+        primaryChipColor = Colors.green.withOpacity(0.1);
+        primaryChipTextColor = Colors.green;
         break;
       default:
-        chipColor = Colors.grey.withOpacity(0.1);
-        chipTextColor = Colors.grey;
+        primaryChipColor = Colors.grey.withOpacity(0.1);
+        primaryChipTextColor = Colors.grey;
     }
+
+    // Determine colors and text for sub-status chip if it exists
+    Color subChipColor = Colors.transparent;
+    Color subChipTextColor = Colors.grey;
+    String displaySubStatus = '';
+
+    if (subStatus.isNotEmpty) {
+      switch (subStatus) {
+        case 'Awaiting SA Review':
+          subChipColor = Colors.orange.withOpacity(0.1); // Light orange/yellow
+          subChipTextColor = Colors.orange;
+          displaySubStatus = 'Awaiting Review';
+          break;
+        case 'Approved by SA': // For display only, these incidents should be archived
+          subChipColor = Colors.lightGreen.withOpacity(0.1);
+          subChipTextColor = Colors.lightGreen;
+          displaySubStatus = 'Approved';
+          break;
+        // You can add more sub-status cases if needed
+        default:
+          subChipColor = Colors.grey.withOpacity(0.1);
+          subChipTextColor = Colors.grey;
+          displaySubStatus = subStatus; // Fallback
+      }
+    }
+
 
     return Card(
       elevation: 1,
@@ -383,6 +484,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start, // Align to top for multi-line status
               children: [
                 Expanded(
                   child: Text(
@@ -391,16 +493,37 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: chipColor,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Text(
-                    incident['status']!,
-                    style: TextStyle(color: chipTextColor, fontSize: 12),
-                  ),
+                const SizedBox(width: 8), // Space between title and status chips
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end, // Align chips to the right
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: primaryChipColor,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        primaryStatus,
+                        style: TextStyle(color: primaryChipTextColor, fontSize: 12),
+                      ),
+                    ),
+                    if (displaySubStatus.isNotEmpty) // Show sub-status chip if it exists
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0), // Small space between chips
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: subChipColor,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            displaySubStatus,
+                            style: TextStyle(color: subChipTextColor, fontSize: 11),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -408,13 +531,6 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
             Text(
               incident['companyInfo']!,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              incident['description']!,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
             const Divider(height: 20, thickness: 1, color: Colors.grey),
             Row(
@@ -437,8 +553,8 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
                       MaterialPageRoute(
                         builder: (context) => SAIncidentDetailScreen(
                           incident: incident,
-                          currentTabStatus: incident['status']!,
-                          onIncidentUpdated: _handleIncidentUpdate,
+                          currentTabStatus: primaryStatus, // Pass main status
+                          onIncidentUpdated: _handleIncidentUpdate, // Pass the callback
                         ),
                       ),
                     );
@@ -472,10 +588,15 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset('assets/nodata.png', width: 100),
+          Image.asset(
+            'assets/nodata.png',
+            width: 100,
+          ),
           const SizedBox(height: 20),
-          const Text('No data', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          const Text('No incidents found.', style: TextStyle(fontSize: 14, color: Colors.grey)),
+          const Text(
+            'No incidents found.',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
         ],
       ),
     );
