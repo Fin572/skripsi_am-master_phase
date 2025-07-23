@@ -1,3 +1,4 @@
+// home_page_admin.dart
 import 'package:asset_management/screen/devices_screen.dart';
 import 'package:asset_management/screen/admin/admin_incident.dart';
 import 'package:flutter/material.dart';
@@ -96,7 +97,6 @@ class AdminHomePage extends StatelessWidget {
 
                 _customCard(
                   title: 'Incident',
-                  subtitle: 'Lorem ipsum',
                   iconPath: 'assets/incident.png',
                   onTap: () {
                     Navigator.push(
@@ -161,7 +161,6 @@ class AdminHomePage extends StatelessWidget {
 
   Widget _customCard({
     required String title,
-    required String subtitle,
     String? iconPath,
     required VoidCallback onTap,
   }) {
@@ -189,7 +188,6 @@ class AdminHomePage extends StatelessWidget {
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             ),

@@ -1,8 +1,7 @@
+// admin_incident_detail_screen.dart
 import 'package:asset_management/screen/admin/Admin_completed_Incident_Screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class AdminIncidentDetailScreen extends StatefulWidget {
   final Map<String, String> incident;
@@ -27,7 +26,6 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
   void initState() {
     super.initState();
     _currentIncident = Map<String, String>.from(widget.incident);
-    print('Current Incident in Detail: $_currentIncident');
   }
 
   Future<void> _showConfirmationDialog(String action) async {
@@ -47,9 +45,9 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
             ),
             TextButton(
               child: const Text('Yes'),
-              onPressed: () async {
+              onPressed: () {
                 Navigator.of(context).pop();
-                await _updateIncidentStatus(action);
+                _updateIncidentStatus(action);
               },
             ),
           ],
@@ -58,10 +56,10 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
     );
   }
 
-  Future<void> _updateIncidentStatus(String action) async {
+  void _updateIncidentStatus(String action) {
     String newStatus;
     if (action == 'Accept') {
-      newStatus = 'On progress'; // Match database enum exactly
+      newStatus = 'On Progress';
     } else if (action == 'Reject') {
       newStatus = 'Rejected';
     } else {
@@ -70,41 +68,10 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
     setState(() {
       _currentIncident['status'] = newStatus;
-      print('Updating incident ${_currentIncident['incident_id']} to status: $newStatus');
     });
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://assetin.my.id/skripsi/update_incidents.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'incident_id': _currentIncident['incident_id'],
-          'status': newStatus,
-        }),
-      );
-
-      final responseData = jsonDecode(response.body);
-      if (responseData['success'] == true) {
-        print('API Success: ${responseData['message']}');
-        widget.onIncidentUpdated(_currentIncident);
-      } else {
-        print('API Error: ${responseData['error']}');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: ${responseData['error']}')),
-        );
-        setState(() {
-          _currentIncident['status'] = widget.incident['status']!; // Revert on failure
-        });
-      }
-    } catch (e) {
-      print('Network Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating incident: $e')),
-      );
-      setState(() {
-        _currentIncident['status'] = widget.incident['status']!; // Revert on failure
-      });
-    }
+    widget.onIncidentUpdated(_currentIncident);
+    Navigator.of(context).pop();
   }
 
   void _handleIncidentCompleted(Map<String, String> updatedIncident) {
@@ -113,7 +80,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 95.0;
+    const double consistentAppBarHeight = 100.0;
 
     final String companyInfo = _currentIncident['companyInfo']!;
     final List<String> companyParts = companyInfo.split(' - ');
@@ -185,7 +152,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
               const SizedBox(height: 10),
               _buildReadOnlyTextField(
                 label: 'Description',
-                value: _currentIncident['description'] ?? 'No description provided',
+                value: _currentIncident['description'] ?? 'Terdapat satu saluran cctv yang tidak muncul di layar TV',
                 isMultiline: true,
               ),
               const SizedBox(height: 20),
@@ -220,7 +187,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                       child: ElevatedButton(
                         onPressed: () => _showConfirmationDialog('Accept'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
+                          backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -234,7 +201,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                     ),
                   ],
                 )
-              else if (_currentIncident['status']?.toLowerCase() == 'on progress')
+              else if (_currentIncident['status'] == 'On Progress')
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
@@ -244,13 +211,12 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                           builder: (context) => AdminCompleteIncidentScreen(
                             incident: _currentIncident,
                             onIncidentCompleted: _handleIncidentCompleted,
-                            action: '',
                           ),
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
                       padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
@@ -258,7 +224,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                     ),
                     child: const Text(
                       'Complete Incident',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18),
                     ),
                   ),
                 ),
@@ -305,16 +271,12 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
   Widget _buildImageGrid() {
     List<String> imageUrls = [];
-    if (_currentIncident['before_photos'] != null && _currentIncident['before_photos']!.isNotEmpty) {
-      imageUrls = _currentIncident['before_photos']!.split(',');
+    if (_currentIncident['imageUrls'] != null && _currentIncident['imageUrls']!.isNotEmpty) {
+      imageUrls = _currentIncident['imageUrls']!.split(',');
     }
 
     final List<Map<String, String>> displayImages = imageUrls.isNotEmpty
-        ? imageUrls.map((url) {
-            String cleanedUrl = url.trim();
-            print('Processing image URL: $cleanedUrl'); // Debug log
-            return {'path': cleanedUrl, 'label': 'Before Image'};
-          }).where((image) => image['path']!.isNotEmpty).toList()
+        ? imageUrls.map((url) => {'path': url, 'label': 'Incident Image'}).toList()
         : [
             {'path': 'assets/cctv_front.png', 'label': 'Front View'},
             {'path': 'assets/cctv_rear.png', 'label': 'Rear View'},
@@ -341,47 +303,18 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: imagePath.startsWith('http')
-                    ? Image.network(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          print('Network image error: $error');
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.broken_image, color: Colors.grey),
-                            ),
-                          );
-                        },
-                      )
-                    : (imagePath.isNotEmpty && RegExp(r'^[A-Za-z0-9+/=]+$').hasMatch(imagePath))
-                        ? Image.memory(
-                            base64Decode(imagePath),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Base64 decode error: $error for path: $imagePath');
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              );
-                            },
-                          )
-                        : Image.asset(
-                            imagePath,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Asset error: $error for path: $imagePath');
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              );
-                            },
-                          ),
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 5),

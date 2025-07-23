@@ -1,8 +1,6 @@
+// admin_incident.dart
+import 'package:asset_management/screen/admin/admin_incident_detail_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'admin_incident_detail_screen.dart';
-import 'package:intl/intl.dart';
 
 class AdminIncidentScreen extends StatefulWidget {
   const AdminIncidentScreen({Key? key}) : super(key: key);
@@ -13,117 +11,93 @@ class AdminIncidentScreen extends StatefulWidget {
 
 class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
   int _selectedTabIndex = 0;
+
   final List<String> _statusCategories = [
     'Assigned',
     'On Progress',
     'Rejected',
     'Completed',
   ];
-  List<Map<String, String>> _incidentData = [];
-  bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchIncidents();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  Future<void> _fetchIncidents() async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final response = await http
-          .get(Uri.parse('http://assetin.my.id/skripsi/get_incidents.php'))
-          .timeout(const Duration(seconds: 10));
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _incidentData = data.map((item) {
-            String formattedDate = '';
-            if (item['incident_date'] != null && item['incident_date'].toString().isNotEmpty) {
-              try {
-                DateTime dateTime = DateTime.parse(item['incident_date'].toString());
-                formattedDate = DateFormat('dd MMM yyyy HH:mm:ss').format(dateTime) + ' WIB';
-              } catch (e) {
-                formattedDate = item['incident_date'].toString();
-              }
-            }
-
-            return {
-              'incident_id': item['incident_id']?.toString() ?? '',
-              'title': item['title']?.toString() ?? 'Untitled Incident',
-              'companyInfo': '${item['organization_name']?.toString() ?? 'Unknown Organization'} - #${item['incident_id']?.toString() ?? ''}',
-              'date': formattedDate,
-              'status': item['status']?.toString() ?? 'Unknown',
-              'location': item['location_name']?.toString() ?? 'Location #${item['location_id']?.toString() ?? 'Unknown'}',
-              'ticketId': '#${item['incident_id']?.toString() ?? ''}',
-              'description': item['description']?.toString() ?? 'No description provided',
-              'imageUrls': item['before_photos']?.toString() ?? '',
-              'value': item['value']?.toString() ?? '',
-              'pic_id': item['pic_id']?.toString() ?? '',
-              'after_photos': item['after_photos']?.toString() ?? '',
-              'action_taken': item['remark']?.toString() ?? '',
-            };
-          }).toList();
-          _isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load incidents: Status code ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching incidents: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching incidents: $e')),
-      );
-    }
-  }
+  final List<Map<String, String>> _incidentData = [
+    {
+      'title': 'CCTV - 123123',
+      'companyInfo': 'PT Dunia Persada - #000001',
+      'date': '25 Jan 2025 11:21:30 WIB',
+      'status': 'Assigned',
+      'location': '#110000 - Kantor Pusat Cakung',
+      'ticketId': '#000001',
+      'description': 'Terdapat satu saluran cctv yang tidak muncul di layar TV',
+      'imageUrls': 'assets/cctv_front.png,assets/cctv_rear.png',
+    },
+    {
+      'title': 'Server Down',
+      'companyInfo': 'PT Maju Jaya - #000002',
+      'date': '26 Jan 2025 10:00:00 WIB',
+      'status': 'On Progress',
+      'location': '#110000 - Kantor Pusat Cakung',
+      'ticketId': '#000002',
+      'description': 'Server di ruang data tidak bisa diakses.',
+      'imageUrls': '',
+    },
+    {
+      'title': 'Network Issue',
+      'companyInfo': 'CV Abadi - #000003',
+      'date': '27 Jan 2025 09:30:00 WIB',
+      'status': 'Rejected',
+      'location': 'Gudang Barat',
+      'ticketId': '#000003',
+      'description': 'Jaringan internet terputus di lantai 3.',
+      'imageUrls': '',
+    },
+    {
+      'title': 'Software Bug',
+      'companyInfo': 'PT Sejahtera - #000004',
+      'date': '28 Jan 2025 14:00:00 WIB',
+      'status': 'Completed',
+      'location': 'Cabang Selatan',
+      'ticketId': '#000004',
+      'description': 'Aplikasi inventaris error saat input data.',
+      'imageUrls': '',
+      'price': '\$50.00',
+      'pic_completed': 'John Doe',
+      'completion_description': 'Bug fix implemented and tested. Software is now stable.',
+      'completed_image_urls': '',
+    },
+    {
+      'title': 'Hardware Failure',
+      'companyInfo': 'PT Makmur - #000005',
+      'date': '29 Jan 2025 16:45:00 WIB',
+      'status': 'Assigned',
+      'location': 'Kantor Pusat Cakung',
+      'ticketId': '#000005',
+      'description': 'Hard drive pada PC 007 rusak.',
+      'imageUrls': '',
+    },
+  ];
 
   void _handleIncidentUpdate(Map<String, String> updatedIncident) {
     setState(() {
       final int index = _incidentData.indexWhere((incident) => incident['ticketId'] == updatedIncident['ticketId']);
       if (index != -1) {
         _incidentData[index] = updatedIncident;
-        final String newStatus = updatedIncident['status']!.toLowerCase();
-        print('Updated incident status: $newStatus for ticketId: ${updatedIncident['ticketId']}');
-        print('Current incident data: $_incidentData');
 
-        int newTabIndex = _statusCategories.indexWhere((status) => status.toLowerCase() == newStatus);
-        if (newTabIndex != -1) {
-          _selectedTabIndex = newTabIndex;
-          print('Switched to tab index: $_selectedTabIndex');
-        } else {
-          print('Status $newStatus not found in _statusCategories');
+        final String newStatus = updatedIncident['status']!;
+        if (_statusCategories.contains(newStatus)) {
+          _selectedTabIndex = _statusCategories.indexOf(newStatus);
         }
-      } else {
-        print('Incident with ticketId ${updatedIncident['ticketId']} not found in _incidentData');
       }
     });
-
-    _fetchIncidents(); // Refresh data from database
   }
 
   @override
   Widget build(BuildContext context) {
     final String currentStatus = _statusCategories[_selectedTabIndex];
     final List<Map<String, String>> filteredIncidents = _incidentData.where((incident) {
-      return (incident['status'] ?? '').toLowerCase() == currentStatus.toLowerCase();
+      return incident['status'] == currentStatus;
     }).toList();
-    print('Current status: $currentStatus');
-    print('Filtered incidents: $filteredIncidents');
 
-    const double consistentAppBarHeight = 95.0;
+    const double consistentAppBarHeight = 100.0;
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -160,105 +134,103 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 48,
+              color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Container(
-                    height: 48,
-                    color: Colors.white,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildTabItem(0, _statusCategories[0]),
-                        _buildTabItem(1, _statusCategories[1]),
-                        _buildTabItem(2, _statusCategories[2]),
-                        _buildTabItem(3, _statusCategories[3]),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search',
-                        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 255, 255, 255),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.0),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          color: Colors.white,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Total Incident',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const Text(
-                                  'Period 1 Jan 2025 - 30 Dec 2025',
-                                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    _buildCountItem('Total', _incidentData.length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Assigned', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'assigned').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('On Progress', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'on progress').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Rejected', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'rejected').length.toString()),
-                                    const SizedBox(width: 8),
-                                    _buildCountItem('Completed', _incidentData.where((i) => (i['status'] ?? '').toLowerCase() == 'completed').length.toString()),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Data(${filteredIncidents.length})',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        filteredIncidents.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: filteredIncidents.length,
-                                itemBuilder: (context, index) {
-                                  final incident = filteredIncidents[index];
-                                  return _buildIncidentListItem(incident);
-                                },
-                              ),
-                      ],
-                    ),
-                  ),
+                  _buildTabItem(0, _statusCategories[0]),
+                  _buildTabItem(1, _statusCategories[1]),
+                  _buildTabItem(2, _statusCategories[2]),
+                  _buildTabItem(3, _statusCategories[3]),
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search',
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 255, 255, 255),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Total Incident',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const Text(
+                            'Period 1 Jan 2025 - 30 Dec 2025',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildCountItem('Total', _incidentData.length.toString()),
+                              const SizedBox(width: 8),
+                              _buildCountItem('Assigned', _incidentData.where((i) => i['status'] == 'Assigned').length.toString()),
+                              const SizedBox(width: 8),
+                              _buildCountItem('On Progress', _incidentData.where((i) => i['status'] == 'On Progress').length.toString()),
+                              const SizedBox(width: 8),
+                              _buildCountItem('Rejected', _incidentData.where((i) => i['status'] == 'Rejected').length.toString()),
+                              const SizedBox(width: 8),
+                              _buildCountItem('Completed', _incidentData.where((i) => i['status'] == 'Completed').length.toString()),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Data(${filteredIncidents.length})',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  filteredIncidents.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filteredIncidents.length,
+                          itemBuilder: (context, index) {
+                            final incident = filteredIncidents[index];
+                            return _buildIncidentListItem(incident);
+                          },
+                        ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -275,7 +247,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? Colors.blueAccent : Colors.transparent,
+              color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.transparent,
               width: 2.0,
             ),
           ),
@@ -283,7 +255,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? Colors.blueAccent : Colors.grey[600],
+            color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey[600],
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -327,20 +299,20 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
   Widget _buildIncidentListItem(Map<String, String> incident) {
     Color chipColor;
     Color chipTextColor;
-    switch (incident['status']?.toLowerCase()) {
-      case 'assigned':
+    switch (incident['status']) {
+      case 'Assigned':
         chipColor = Colors.blue.withOpacity(0.1);
         chipTextColor = Colors.blue;
         break;
-      case 'on progress':
+      case 'On Progress':
         chipColor = Colors.orange.withOpacity(0.1);
         chipTextColor = Colors.orange;
         break;
-      case 'rejected':
+      case 'Rejected':
         chipColor = Colors.red.withOpacity(0.1);
         chipTextColor = Colors.red;
         break;
-      case 'completed':
+      case 'Completed':
         chipColor = Colors.green.withOpacity(0.1);
         chipTextColor = Colors.green;
         break;
@@ -386,13 +358,6 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
             Text(
               incident['companyInfo']!,
               style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              incident['description']!,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
             const Divider(height: 20, thickness: 1, color: Colors.grey),
             Row(
