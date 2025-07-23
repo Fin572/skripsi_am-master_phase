@@ -135,7 +135,7 @@ class SuperAdminHomePage extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SuperAdminRegister(_organizations: [],)), // Updated to match NEW UI parameter
+                      MaterialPageRoute(builder: (context) => const SuperAdminRegister(organizations: [],)), // Changed _organizations to organizations
                     );
                   },
                 ),

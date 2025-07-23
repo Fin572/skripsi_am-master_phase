@@ -1,3 +1,4 @@
+// lib/screens/super_admin/SA_user_list_screen.dart
 import 'package:asset_management/screen/super_admin/SA_user_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/screen/models/user.dart'; // Import the User model
@@ -21,6 +22,9 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
       'addedDate': '25 Jan 2025',
       'companyName': 'PT Dunia Persada', // Added
       'userId': '#000001', // Added
+      // Removed 'phone' and 'role' from dummy data if they are not needed anywhere
+      // If you need them for other parts of the app, keep them here,
+      // but ensure they are not passed to User constructor.
     },
     {
       'name': 'Dina',
@@ -180,7 +184,7 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                   focusedBorder: OutlineInputBorder(
                     // Border when focused
                     borderRadius: BorderRadius.circular(12.0),
-                    borderSide: const BorderSide(color: const Color.fromRGBO(52, 152, 219, 1), width: 2.0), // Blue outline when focused
+                    borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // Blue outline when focused
                   ),
                   contentPadding: const EdgeInsets.symmetric(vertical: 0), // Adjust padding
                 ),
@@ -261,7 +265,6 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
   }
 
   // Helper method to build a user list item card
-  // This is the method that needs the crucial update for navigation
   Widget _buildUserListItem(Map<String, String> userMap) {
     return Card(
       elevation: 1,
@@ -302,19 +305,20 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
             TextButton(
               onPressed: () {
                 // Create a User object from the map data BEFORE navigating
-                final customer = User(
+                final userObject = User( // Changed variable name to avoid confusion
                   name: userMap['name']!,
                   email: userMap['email']!,
                   companyName: userMap['companyName']!,
                   userId: userMap['userId']!,
                   addedDate: userMap['addedDate']!,
+                  // Removed phone and role from here
                 );
 
-                // Navigate to UserDetailScreen, passing the user object
+                // Navigate to UserDetailScreen, passing the userObject
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SAUserDetailScreen(user: user),
+                    builder: (context) => SAUserDetailScreen(user: userObject),
                   ),
                 );
               },
