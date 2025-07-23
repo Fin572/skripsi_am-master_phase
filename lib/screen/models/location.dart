@@ -4,7 +4,7 @@ class Location {
   final String name; // Location name
   final String? address; // Location address
   final String? detail; // Additional details about the location
-  final String? locationPICId; // The person in charge (PIC) of the location
+  final String? personInCharge; // The person in charge (PIC) of the location
   final String? phoneNumber; // Contact number for the location
   final double? latitude; // Optional: Latitude coordinate (for map positioning)
   final double? longitude; // Optional: Longitude coordinate (for map positioning)
@@ -16,7 +16,7 @@ class Location {
     required this.name,
     this.address,
     this.detail,
-    this.locationPICId,
+    this.personInCharge,
     this.phoneNumber,
     this.latitude,
     this.longitude,
@@ -31,7 +31,7 @@ class Location {
       'location_name': name,
       'address': address,
       'detail': detail,
-      'locationPIC_id': locationPICId,
+      'person_In_Charge': personInCharge,
       'phone_number': phoneNumber,
       'latitude': latitude,
       'longitude': longitude,
@@ -48,7 +48,7 @@ class Location {
       organizationId: json['owner_organization']?.toString(), // Assuming PHP might return this
       address: json['address'] as String?,
       detail: json['detail'] as String?,
-      locationPICId: json['locationPIC_id'] as String?,
+      personInCharge: json['person_In_Charge'] as String?,
       phoneNumber: json['phonenumber'] as String?, // Note: PHP uses 'phonenumber'
       latitude: json['geolocation'] != null ? double.tryParse(json['geolocation'].split(',')[0]) : null, // Assuming geolocation is "lat,lon" string
       longitude: json['geolocation'] != null ? double.tryParse(json['geolocation'].split(',')[1]) : null,
