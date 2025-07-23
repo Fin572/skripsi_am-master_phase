@@ -1,3 +1,4 @@
+// asset.dart
 // lib/screens/models/asset.dart
 class Asset {
   final String id;
@@ -9,7 +10,7 @@ class Asset {
   final double longitude;
   final String personInCharge;
   final String phoneNumber;
-  final String barcodeData;
+  final String? barcodeData;
 
   Asset({
     required this.id,
@@ -21,6 +22,6 @@ class Asset {
     required this.longitude,
     required this.personInCharge,
     required this.phoneNumber,
-    this.barcodeData = '',
+    this.barcodeData,
   });
 }

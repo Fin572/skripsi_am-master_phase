@@ -1,3 +1,4 @@
+// auth_screen.dart
 import 'package:asset_management/screen/admin/admin_main_screen.dart';
 import 'package:asset_management/screen/main_screen.dart';
 import 'package:asset_management/screen/models/user_role.dart';
@@ -53,22 +54,28 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (data['status'] == 'success') {
       String role = data['role'];
+      // Assuming 'email' is also returned from the API for each user.
+      // If not, you might need to adjust or use a placeholder like login@example.com
+      String userEmail = data['email'] ?? '$login@example.com'; // Use actual email if provided, else construct one
       Widget targetScreen;
 
       // Redirect based on role
       if (role == 'customer') {
         targetScreen = MainScreen(
-          username: login,
-          password: password,
+          userName: login, // Changed parameter name
+          userEmail: userEmail, // Added userEmail
+          userRole: UserRole.customer, // Added userRole
         );
       } else if (role == 'admin') {
         targetScreen = AdminMainScreen(
           userName: login,
+          userEmail: userEmail, // Added userEmail
           userRole: UserRole.admin,
         );
       } else if (role == 'super_admin') {
         targetScreen = SuperAdminMainScreen(
           userName: login,
+          userEmail: userEmail, // Added userEmail
           userRole: UserRole.superAdmin,
         );
       } else {
