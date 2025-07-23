@@ -2,13 +2,13 @@
 import 'package:asset_management/screen/models/incident_view_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/screen/incident_detail.dart';
-import 'package:asset_management/screen/models/incident_view_screen.dart'; // Import the view screen
+import 'package:asset_management/screen/models/incident_view_screen.dart';
 import 'package:asset_management/screen/models/location.dart';
 import 'package:asset_management/screen/models/asset.dart';
 import 'package:asset_management/screen/models/incident_ticket.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart';
 
 class Incident extends StatefulWidget {
   const Incident({Key? key}) : super(key: key);
@@ -43,66 +43,11 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
   ];
 
   final List<Asset> _mockAssets = [
-    Asset(
-      id: 'AST001',
-      name: 'Server Rack 1',
-      locationId: 'LOC001',
-      category: 'IT Equipment', // NEW: Example value
-      locationInfo: 'Server Room', // NEW: Example value
-      latitude: -6.1753924, // NEW: Example value (Monas for Jakarta)
-      longitude: 106.8271528, // NEW: Example value
-      personInCharge: 'Budi', // NEW: Example value
-      phoneNumber: '081234567890', // NEW: Example value
-      barcodeData: 'SR001' // NEW: Optional, but good to include if defined
-    ),
-    Asset(
-      id: 'AST002',
-      name: 'CCTV Camera 5',
-      locationId: 'LOC001',
-      category: 'Security', // NEW: Example value
-      locationInfo: 'Main Building', // NEW: Example value
-      latitude: -6.1753924,
-      longitude: 106.8271528,
-      personInCharge: 'Andi',
-      phoneNumber: '081298765432',
-      barcodeData: 'CCTV005'
-    ),
-    Asset(
-      id: 'AST003',
-      name: 'Network Switch A',
-      locationId: 'LOC002',
-      category: 'IT Equipment',
-      locationInfo: 'Network Closet',
-      latitude: -6.2000, // Different location for variety
-      longitude: 106.8500,
-      personInCharge: 'Sasa',
-      phoneNumber: '081112233445',
-      barcodeData: 'NTA001'
-    ),
-    Asset(
-      id: 'AST004',
-      name: 'Fire Extinguisher',
-      locationId: 'LOC002',
-      category: 'Safety',
-      locationInfo: 'Hallway',
-      latitude: -6.2000,
-      longitude: 106.8500,
-      personInCharge: 'Dina',
-      phoneNumber: '087766554433',
-      barcodeData: 'FE004'
-    ),
-    Asset(
-      id: 'AST005',
-      name: 'AC Unit 3',
-      locationId: 'LOC003',
-      category: 'HVAC',
-      locationInfo: 'Office 3A',
-      latitude: -6.2500, // Different location
-      longitude: 106.7500,
-      personInCharge: 'Fajar',
-      phoneNumber: '089900112233',
-      barcodeData: 'ACU003'
-    ),
+    Asset(id: 'AST001', name: 'Server Rack 1', locationId: 'LOC001', category: 'IT Equipment', locationInfo: 'Server Room', latitude: -6.1753924, longitude: 106.8271528, personInCharge: 'Budi', phoneNumber: '081234567890', barcodeData: 'SR001'),
+    Asset(id: 'AST002', name: 'CCTV Camera 5', locationId: 'LOC001', category: 'Security', locationInfo: 'Main Building', latitude: -6.1753924, longitude: 106.8271528, personInCharge: 'Andi', phoneNumber: '081298765432', barcodeData: 'CCTV005'),
+    Asset(id: 'AST003', name: 'Network Switch A', locationId: 'LOC002', category: 'IT Equipment', locationInfo: 'Network Closet', latitude: -6.2000, longitude: 106.8500, personInCharge: 'Sasa', phoneNumber: '081112233445', barcodeData: 'NTA001'),
+    Asset(id: 'AST004', name: 'Fire Extinguisher', locationId: 'LOC002', category: 'Safety', locationInfo: 'Hallway', latitude: -6.2000, longitude: 106.8500, personInCharge: 'Dina', phoneNumber: '087766554433', barcodeData: 'FE004'),
+    Asset(id: 'AST005', name: 'AC Unit 3', locationId: 'LOC003', category: 'HVAC', locationInfo: 'Office 3A', latitude: -6.2500, longitude: 106.7500, personInCharge: 'Fajar', phoneNumber: '089900112233', barcodeData: 'ACU003'),
   ];
 
   @override
@@ -114,7 +59,7 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
     });
     _fetchIncidentData();
     _searchController.addListener(() {
-      setState(() {}); // Rebuild for search filter
+      setState(() {});
     });
   }
 
@@ -136,71 +81,98 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
 
   Future<void> _fetchTickets(String statusParam, List<IncidentTicket> ticketList, ValueSetter<bool> setLoading, ValueSetter<String> setError) async {
     try {
-      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/incident_get.php?status=$statusParam'));
+      // PERBAIKAN: Tambah retry mechanism sederhana hingga 3 kali untuk handle timeout
+      http.Response? response; // PERBAIKAN: Ubah dari 'Response?' ke 'http.Response?' untuk definisi class yang benar dari package http
+      int retryCount = 0;
+      const int maxRetries = 3;
+      while (response == null && retryCount < maxRetries) {
+        try {
+          response = await http.get(Uri.parse('http://assetin.my.id/skripsi/incident_get.php?status=$statusParam')).timeout(const Duration(seconds: 30)); // PERBAIKAN: Tingkatkan timeout dari 10 ke 30 detik
+        } catch (e) {
+          retryCount++;
+          print('Retry $retryCount for status $statusParam due to error: $e');
+          if (retryCount >= maxRetries) {
+            throw e; // Lempar error jika gagal setelah retry
+          }
+          await Future.delayed(const Duration(seconds: 2)); // Delay sebelum retry
+        }
+      }
+      print('Response Status: ${response!.statusCode}');
+      print('Raw Response Body: ${response.body}');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['status'] == 'success') {
+        print('Decoded Response for $statusParam: ${jsonEncode(data)}');
+        if (data['status'] == 'success' && data['data'] is List) {
           ticketList.clear();
           ticketList.addAll((data['data'] as List).map((item) {
-            // Parse and format date if needed
+            print('Raw Item: $item');
+            if (item['before_photos'] == null) print('Warning: before_photos is null for item ${item['incident_id']}');
             DateTime parsedDate = DateTime.parse(item['incident_date']);
             String formattedDate = DateFormat('dd MMM yyyy HH:mm:ss').format(parsedDate) + ' WIB';
-
-            // Map to IncidentTicket model
-            // Assuming Asset and Location are fetched or mocked; adjust as per your models
-            // For simplicity, creating dummy Asset and Location based on IDs
             final asset = _mockAssets.firstWhere(
-              (a) => a.id == (item['asset_id']?.toString() ?? ''),
-              orElse: () => Asset(
-                id: item['asset_id']?.toString() ?? '0',
-                name: item['title'] ?? 'Unknown Asset',
-                locationId: item['location_id']?.toString() ?? '0',
-                category: '', // Fill if available
-                locationInfo: '', 
-                latitude: 0.0,
-                longitude: 0.0,
-                personInCharge: '',
-                phoneNumber: '',
-                barcodeData: '',
-              ),
+                (a) => a.id == (item['asset_id']?.toString() ?? ''),
+                orElse: () => Asset(id: item['asset_id']?.toString() ?? '0', name: item['title'] ?? 'Unknown Asset', locationId: item['location_id']?.toString() ?? '0', category: '', locationInfo: '', latitude: 0.0, longitude: 0.0, personInCharge: '', phoneNumber: '', barcodeData: ''),
             );
-
             final location = _mockLocations.firstWhere(
-              (l) => l.id == (item['location_id']?.toString() ?? ''),
-              orElse: () => Location(
-                id: item['location_id']?.toString() ?? '0',
-                name: 'Unknown Location',
-              ),
+                (l) => l.id == (item['location_id']?.toString() ?? ''),
+                orElse: () => Location(id: item['location_id']?.toString() ?? '0', name: 'Unknown Location'),
             );
-
-            return IncidentTicket(
-              ticketId: item['incident_id']?.toString() ?? '0',
-              asset: asset,
-              location: location,
-              status: _mapStatusFromDb(item['status'] ?? '', statusParam),
-              description: item['description'] ?? '',
-              submissionTime: parsedDate,
-              imageUrls: [], // Adjust if you fetch image URLs from before_photos/after_photos
-              // Add other required fields if any
+            var imageUrls = (item['before_photos'] as List<dynamic>?)?.map((e) {
+                  String base64Str = e.toString().trim();
+                  if (base64Str.isEmpty) {
+                    print('Empty base64 string detected for item ${item['incident_id']}');
+                    return null; // Skip empty
+                  }
+                  if (base64Str.startsWith('data:image/')) {
+                    base64Str = base64Str.split(',').last;
+                  }
+                  base64Str = base64Str.replaceAll('\n', '').replaceAll('\r', '').replaceAll(' ', '');
+                  if (base64Str.length < 100) { // Minimal length untuk image valid
+                    print('Invalid short base64 string for item ${item['incident_id']}');
+                    return null;
+                  }
+                  try {
+                    base64Decode(base64Str); // Test decode tanpa simpan, untuk verifikasi
+                    return base64Str;
+                  } catch (error) {
+                    print('Error decoding base64 for item ${item['incident_id']}: $error');
+                    return null; // Skip jika invalid
+                  }
+                }).where((s) => s != null).cast<String>().toList() ?? [];
+            if (imageUrls.length > 4) {
+              imageUrls = imageUrls.sublist(0, 4);
+              print('Limited to 4 images for item ${item['incident_id']}');
+            }
+            final incident = IncidentTicket(
+                ticketId: item['incident_id']?.toString() ?? '0',
+                asset: asset,
+                location: location,
+                status: _mapStatusFromDb(item['status'] ?? '', statusParam),
+                description: item['description'] ?? '',
+                submissionTime: parsedDate,
+                imageUrls: imageUrls,
             );
+            print('Incident ${incident.ticketId} - Image URLs count: ${incident.imageUrls.length}');
+            return incident;
           }).toList());
           setLoading(false);
         } else {
-          setError(data['message'] ?? 'Failed to load data');
+          setError('Invalid data format: ${jsonEncode(data)}');
           setLoading(false);
         }
       } else {
-        setError('Server error: ${response.statusCode}');
+        setError('Server error: ${response.statusCode} - ${response.body}');
         setLoading(false);
       }
-    } catch (e) {
-      setError('Error: $e');
+    } catch (e, stack) {
+      // PERBAIKAN: Pesan error lebih informatif untuk user
+      setError('Gagal memuat data: Koneksi timeout atau server tidak responsif. Silakan periksa koneksi internet atau coba lagi nanti. Detail: $e');
       setLoading(false);
+      print('Exception in fetch: $e\nStack trace: $stack');
     }
   }
 
   String _mapStatusFromDb(String dbStatus, String param) {
-    // Map DB status to app status
     if (param == 'assigned') return 'Assigned';
     if (param == 'on_progress') return 'On progress';
     if (param == 'rejected') return 'Rejected';
@@ -224,7 +196,6 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
         tickets = _doneTickets;
         break;
     }
-
     final search = _searchController.text.toLowerCase();
     return tickets.where((ticket) => ticket.ticketId.toLowerCase().contains(search) || ticket.asset.name.toLowerCase().contains(search)).toList();
   }
@@ -234,7 +205,7 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
       return const Center(child: CircularProgressIndicator());
     }
     if (error.isNotEmpty) {
-      return Center(child: Text(error));
+      return Center(child: Text('Error: $error'));
     }
     if (tickets.isEmpty) {
       return _buildEmptyState();
@@ -423,16 +394,14 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                 final dynamic result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => IncidentDetailScreen( // Corrected to IncidentDetail (no 'Screen')
+                    builder: (context) => IncidentDetailScreen(
                       availableLocations: _mockLocations,
                       availableAssets: _mockAssets,
                     ),
                   ),
                 );
-
                 if (result is IncidentTicket) {
                   setState(() {
-                    // Refresh data after adding new ticket
                     _fetchIncidentData();
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -524,7 +493,6 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
               children: [
                 TextButton(
                   onPressed: () async {
-                    // Navigate to IncidentViewScreen and await the result (ticketId if deleted)
                     final dynamic result = await Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -533,9 +501,8 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                         ),
                       ),
                     );
-
-                    if (result is String) { // Check if a String (ticketId) was returned, indicating deletion
-                      _fetchIncidentData(); // Refresh data after deletion
+                    if (result is String) {
+                      _fetchIncidentData();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Ticket $result has been deleted.'),
