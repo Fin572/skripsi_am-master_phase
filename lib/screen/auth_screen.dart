@@ -62,6 +62,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (data['status'] == 'success') {
       String role = data['role'];
+      String organizationName = data['organization_name']; // Extract organization_name from response
       // Assuming 'email' is also returned from the API for each user.
       String userEmail = data['email'] ?? '$login@example.com'; // Use actual email if provided, else construct one
       Widget targetScreen;
@@ -72,6 +73,7 @@ class _AuthScreenState extends State<AuthScreen> {
           userName: login,
           userEmail: userEmail,
           userRole: UserRole.customer,
+          organizationName: organizationName, // Pass the extracted organizationName
         );
       } else if (role == 'admin') {
         targetScreen = AdminMainScreen(
@@ -296,10 +298,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                         const SizedBox(height: 24), // From NEW UI
-                        const Text(
-                          'Privacy Policy | Terms and Condition',
-                          style: TextStyle(color: Colors.grey),
-                        ),
+
                       ],
                     ),
                   ),

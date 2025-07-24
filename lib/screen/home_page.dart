@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:asset_management/screen/main_screen.dart'; // Import MainScreen
 import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole enum
-import 'package:http/http.dart' as http; // For backend interaction
-import 'dart:convert'; // For json decoding
-
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -25,21 +22,17 @@ void showComingSoonPopup(BuildContext context) {
 }
 
 class UserHomePage extends StatefulWidget {
-  // 1. Declare final fields to store the passed data
   final String userName;
   final String userEmail;
-  final UserRole userRole; // Add this
-  // Removed password from here as it's not ideal to pass directly to HomePage for fetching.
-  // Instead, the fetchUserData will rely on the initially passed userName (login)
-  // or you'd fetch user data based on authenticated session/token.
-  // For now, I'll keep the original logic as close as possible using userName as 'login'.
+  final UserRole userRole;
+  final String organizationName; // Parameter for direct passing
 
-  // 2. Add a constructor to receive the data
   const UserHomePage({
     super.key,
     required this.userName,
     required this.userEmail,
     required this.userRole,
+    required this.organizationName,
   });
 
   @override
@@ -47,67 +40,13 @@ class UserHomePage extends StatefulWidget {
 }
 
 class _UserHomePageState extends State<UserHomePage> {
-  String organizationName = "Loading..."; // From original home_page.dart
-  // Added userEmail as a state variable for use in _buildCompanyCard for consistency
-  String _companyEmail = "user@user.com";
+  late String _companyEmail; // Set in initState for consistency
 
   @override
   void initState() {
     super.initState();
-    // Assuming 'login' in your API is equivalent to userName here
-    _fetchUserData(widget.userName); // Use widget.userName for fetching
+    _companyEmail = widget.userEmail; // Use user's email as fallback; adjust if organization email is available
   }
-
-  // Merged fetchUserData from original home_page.dart
-  Future<void> _fetchUserData(String loginUsername) async {
-    try {
-      // In a real app, you would not send password again here.
-      // You'd typically use a token or session.
-      // But adhering to the original file's logic for now.
-      final response = await http.post(
-        Uri.parse('http://assetin.my.id/skripsi/login.php'),
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: {
-          'login': loginUsername,
-          // If you have a password from login, you could pass it,
-          // but for security, usually, you don't re-send it.
-          // Assuming the API allows fetching org name by login only after initial auth.
-          'password': 'any_password', // Placeholder, ideally remove or use secure token
-        },
-      );
-
-      print('Response Status (UserHomePage fetchUserData): ${response.statusCode}');
-      print('Response Body (UserHomePage fetchUserData): ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('Parsed Data (UserHomePage fetchUserData): $data');
-
-        if (data['status'] == 'success' && data.containsKey('organization_name')) {
-          setState(() {
-            organizationName = data['organization_name'];
-            _companyEmail = data['email'] ?? widget.userEmail; // Update company email if provided
-          });
-        } else {
-          print('Fetch user data failed: ${data['message'] ?? 'No message provided'}');
-          setState(() {
-            organizationName = "Error: ${data['message'] ?? 'Unknown error'}";
-          });
-        }
-      } else {
-        print('HTTP Error (UserHomePage fetchUserData): Status code ${response.statusCode}');
-        setState(() {
-          organizationName = "Error: HTTP ${response.statusCode}";
-        });
-      }
-    } catch (e) {
-      print('Exception (UserHomePage fetchUserData): $e');
-      setState(() {
-        organizationName = "Error: $e";
-      });
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +99,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 ),
 
                 const SizedBox(height: 4), // From NEW UI
-                _buildCompanyCard(), // Now calls the updated method
+                _buildCompanyCard(), // Uses passed organizationName
                 const SizedBox(height: 15), // From NEW UI
 
                 const Padding(
@@ -169,13 +108,12 @@ class _UserHomePageState extends State<UserHomePage> {
                 ),
                 const SizedBox(height: 12), // From NEW UI
 
-                _customCard( // Uses the updated _customCard
+                _customCard(
                   title: 'Incident',
                   iconPath: 'assets/incident.png',
-                  onTap: (){
+                  onTap: () {
                     Navigator.push(
                       context,
-                      // For customer, it's the base Incident screen
                       MaterialPageRoute(builder: (context) => const Incident(isAdmin: false)),
                     );
                   },
@@ -188,7 +126,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 ),
                 const SizedBox(height: 12), // From NEW UI
 
-                _customCard( // Uses the updated _customCard
+                _customCard(
                   title: 'Devices',
                   iconPath: 'assets/Devices.png',
                   onTap: () {
@@ -207,7 +145,6 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  // Updated _buildCompanyCard to match NEW UI and use fetched data
   Widget _buildCompanyCard() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -220,7 +157,7 @@ class _UserHomePageState extends State<UserHomePage> {
             children: [
               Row(
                 children: [
-                  const CircleAvatar( // From NEW UI
+                  const CircleAvatar(
                     radius: 25,
                     backgroundImage: AssetImage('assets/company.png'),
                   ),
@@ -229,9 +166,10 @@ class _UserHomePageState extends State<UserHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        organizationName.isEmpty || organizationName == 'Loading...' ? 'No Company Name' : organizationName, // Uses fetched organizationName
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // From NEW UI
-                      Text(_companyEmail, style: const TextStyle(color: Colors.grey)), // Uses updated _companyEmail
+                        widget.organizationName.isEmpty ? 'No Company Name' : widget.organizationName, // Uses passed organizationName
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Text(_companyEmail, style: const TextStyle(color: Colors.grey)), // Uses _companyEmail
                     ],
                   ),
                 ],
@@ -254,7 +192,6 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  // Updated _customCard to match NEW UI (removed subtitle)
   Widget _customCard({
     required String title,
     String? iconPath,
@@ -283,8 +220,7 @@ class _UserHomePageState extends State<UserHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), // From NEW UI
-                  // Subtitle removed as per NEW UI design for this card
-                  const SizedBox(height: 4), // Added a small space even if subtitle is gone
+                  const SizedBox(height: 4), // Added a small space
                 ],
               ),
             ),

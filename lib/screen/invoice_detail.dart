@@ -1,17 +1,17 @@
 // lib/screens/invoice_detail.dart
+import 'package:asset_management/screen/user_Invoice.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
-// Correct import path for the Invoice model and UserInvoice widget
-import 'package:asset_management/screen/user_invoice.dart'; // Make sure this path is correct after renaming
+
 
 class Invoicedetail extends StatefulWidget {
   final String status;
   final int incident_id;
-  final Invoice? invoice;
-  final void Function(Invoice)? onPaymentConfirmed; // Corrected type in previous step
+  final InvoiceModel? invoice;
+  final void Function(InvoiceModel)? onPaymentConfirmed; // Corrected type in previous step
 
   const Invoicedetail({
     super.key,
@@ -106,7 +106,7 @@ class _InvoicedetailState extends State<Invoicedetail> {
     setState(() => isLoading = true);
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.3/skripsi/update_payment.php'),
+        Uri.parse('http://assetin.my.id/skripsi/update_payment.php'),
         body: {'incident_id': widget.incident_id.toString()},
       );
       if (response.statusCode == 200) {
@@ -116,7 +116,7 @@ class _InvoicedetailState extends State<Invoicedetail> {
             isPaid = true;
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment confirmed!')));
             if (widget.onPaymentConfirmed != null && widget.invoice != null) {
-              final updatedInvoice = Invoice(
+              final updatedInvoice = InvoiceModel(
                 id: widget.invoice!.id,
                 title: widget.invoice!.title,
                 companyName: widget.invoice!.companyName,

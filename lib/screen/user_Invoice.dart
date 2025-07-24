@@ -1,24 +1,24 @@
-// lib/screens/user_invoice.dart (Your Invoice.dart file, updated again)
+// user_invoice.dart
 import 'package:asset_management/screen/invoice_detail.dart';
-import 'package:asset_management/screen/models/user_role.dart'; // Ensure UserRole is defined
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // For backend interaction
-import 'dart:convert'; // For json decoding
-import 'package:intl/intl.dart'; // For date formatting from original Invoice.dart
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart'; // For date formatting
+import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole if needed
 
-// 1. Create an Invoice Model (from user_invoice NEW UI.dart)
-class Invoice {
+// Invoice Model (renamed to InvoiceModel to avoid name collision with the widget)
+class InvoiceModel {
   final String id; // Unique identifier for the invoice
   final String title;
   final String companyName;
   final String companyId; // From NEW UI, but should map to an actual ID or be derived
   final String dateTime;
-  String status; // Make status mutable
+  final String status; // Make status mutable
 
   // Added incidentId for API calls in InvoiceDetail
   final int incidentId;
 
-  Invoice({
+  InvoiceModel({
     required this.id,
     required this.title,
     required this.companyName,
@@ -29,7 +29,7 @@ class Invoice {
   });
 
   // Helper to convert from JSON (matching your API response structure)
-  factory Invoice.fromJson(Map<String, dynamic> json) {
+  factory InvoiceModel.fromJson(Map<String, dynamic> json) {
     // Format date string to match the desired display format
     String formattedDate = '';
     try {
@@ -43,8 +43,8 @@ class Invoice {
       formattedDate = json['date']?.toString() ?? 'Unknown Date'; // Fallback
     }
 
-    return Invoice(
-      id: json['id']?.toString() ?? '',
+    return InvoiceModel(
+      id: json['incident_id']?.toString() ?? '', // Use incident_id as id if no separate id field
       title: json['title']?.toString() ?? '',
       companyName: json['company']?.toString() ?? '', // Assuming 'company' from API
       companyId: json['incident_id']?.toString() ?? '', // Using incident_id as companyId for card display consistency if needed
@@ -55,7 +55,7 @@ class Invoice {
   }
 }
 
-// CustomCard widget definition (from user_invoice NEW UI.dart)
+// CustomCard widget definition
 class CustomCard extends StatelessWidget {
   final String title;
   final String companyName;
@@ -183,6 +183,7 @@ class CustomCard extends StatelessWidget {
   }
 }
 
+// Define the StatefulWidget class for the screen
 class UserInvoice extends StatefulWidget {
   final String userName;
   final String userEmail;
@@ -203,8 +204,8 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
   late TabController _tabController;
   TextEditingController _searchController = TextEditingController();
 
-  List<Invoice> unpaidData = [];
-  List<Invoice> paidData = [];
+  List<InvoiceModel> unpaidData = [];
+  List<InvoiceModel> paidData = [];
   bool _isLoading = true;
 
   @override
@@ -236,10 +237,10 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
         if (data['success']) {
           setState(() {
             unpaidData = (data['unpaid'] as List)
-                .map((item) => Invoice.fromJson(item))
+                .map((item) => InvoiceModel.fromJson(item))
                 .toList();
             paidData = (data['paid'] as List)
-                .map((item) => Invoice.fromJson(item))
+                .map((item) => InvoiceModel.fromJson(item))
                 .toList();
             _isLoading = false;
           });
@@ -256,20 +257,7 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
     }
   }
 
-  // FIX: Explicitly define the return type to match what Invoicedetail's onPaymentConfirmed expects.
-  // This function now returns 'void' which is a subtype of 'dynamic'.
-  // We don't need 'Future<void>' here unless it performs async operations that need to be awaited *by its caller*.
-  // For a simple callback to update state, `void` is typical.
-  void _handlePaymentConfirmed(Invoice invoice) {
-    setState(() {
-      unpaidData.removeWhere((item) => item.id == invoice.id);
-      invoice.status = 'Paid';
-      paidData.add(invoice);
-    });
-  }
-
-
-  Widget _BuildCard(Invoice invoice) {
+  Widget _buildCard(InvoiceModel invoice) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: CustomCard(
@@ -285,18 +273,6 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
               builder: (context) => Invoicedetail(
                 status: invoice.status,
                 incident_id: invoice.incidentId,
-                // FIX for "The argument type 'Invoice' can't be assigned to the parameter type 'Invoice?'"
-                // Although passing non-nullable to nullable should be fine,
-                // explicit cast can sometimes resolve stubborn linting issues or
-                // compiler confusion in complex type inference scenarios.
-                // Or, more accurately, we ensure 'invoice' here is indeed non-nullable.
-                // By removing 'invoice?' in Invoicedetail and making it 'invoice', this error would truly disappear.
-                // But sticking to the Invoice? as per our last update in invoice_detail.
-                // So, the current 'invoice: invoice' line should NOT generate this error.
-                // If it still does, it indicates a caching issue in your IDE or a deeper project setup problem.
-                // For a strict workaround, you could use: invoice: invoice as Invoice?, but this is usually unnecessary.
-                invoice: invoice, // This line is correct as is, given Invoice? in Invoicedetail.
-                onPaymentConfirmed: _handlePaymentConfirmed, // This should now resolve due to the fix in Invoicedetail and this file.
               ),
             ),
           );
@@ -305,7 +281,7 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildTabContent(List<Invoice> data) {
+  Widget _buildTabContent(List<InvoiceModel> data) {
     final filteredData = data.where((item) {
       final search = _searchController.text.toLowerCase();
       return item.title.toLowerCase().contains(search);
@@ -324,7 +300,7 @@ class _UserInvoiceState extends State<UserInvoice> with SingleTickerProviderStat
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
           child: Text('Data(${filteredData.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
-        ...filteredData.map((item) => _BuildCard(item)).toList(),
+        ...filteredData.map((item) => _buildCard(item)).toList(),
       ],
     );
   }

@@ -11,12 +11,14 @@ class MainScreen extends StatefulWidget {
   final String userName;
   final String userEmail;
   final UserRole userRole;
+  final String organizationName; // Added to receive organizationName from login
 
   const MainScreen({
     Key? key,
     required this.userName,
     required this.userEmail,
     required this.userRole,
+    required this.organizationName,
   }) : super(key: key);
 
   @override
@@ -27,22 +29,23 @@ class _MainScreenState extends State<MainScreen> {
   int _pageIndex = 0;
 
   List<Widget> get _userPages => [
-    // FIX: Pass all required parameters to UserHomePage
+    // Pass all required parameters to UserHomePage, including organizationName
     UserHomePage(
       userName: widget.userName,
       userEmail: widget.userEmail,
       userRole: widget.userRole,
+      organizationName: widget.organizationName, // Pass the received organizationName
     ),
     // History() constructor has no required parameters based on provided code,
     // so this line remains correct.
     History(),
-    // FIX: Changed Invoice() to UserInvoice() and pass all required parameters
+    // Changed Invoice() to UserInvoice() and pass all required parameters
     UserInvoice(
       userName: widget.userName,
       userEmail: widget.userEmail,
       userRole: widget.userRole,
     ),
-    // FIX: Pass all required parameters to UserProfile
+    // Pass all required parameters to UserProfile
     UserProfile(
       userName: widget.userName,
       userEmail: widget.userEmail,
