@@ -11,8 +11,9 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class Incident extends StatefulWidget {
-  const Incident({Key? key}) : super(key: key);
-
+  final bool isAdmin;
+  const Incident({Key? key, this.isAdmin = false}) : super(key: key); 
+  
   @override
   State<Incident> createState() => _IncidentState();
 }

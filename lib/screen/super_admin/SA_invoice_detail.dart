@@ -1,17 +1,18 @@
+// SA_invoice_detail.dart
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
-class SuperAdminInvoiceDetail extends StatefulWidget {
+class AdminInvoiceDetail extends StatefulWidget {
   final String status;
 
-  const SuperAdminInvoiceDetail({super.key, required this.status});
+  const AdminInvoiceDetail({super.key, required this.status});
 
   @override
-  State<SuperAdminInvoiceDetail> createState() => _InvoicedetailState();
+  State<AdminInvoiceDetail> createState() => _AdminInvoicedetailState();
 }
 
-class _InvoicedetailState extends State<SuperAdminInvoiceDetail> {
-  int _selectedPaymentIndex = 0;
+class _AdminInvoicedetailState extends State<AdminInvoiceDetail> {
+  int _selectedPaymentIndex = 0; // This variable is not used in the UI, can be removed if not needed for future logic.
   final List<String> imageList = [
     'assets/cctv.png',
     'assets/cctv.png',
@@ -20,8 +21,7 @@ class _InvoicedetailState extends State<SuperAdminInvoiceDetail> {
   @override
   Widget build(BuildContext context) {
     bool isPaid = widget.status == 'Paid';
-    // Define the consistent AppBar height
-    const double consistentAppBarHeight = 95.0;
+    const double consistentAppBarHeight = 100.0; // Updated to 100.0 from 95.0
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -29,9 +29,8 @@ class _InvoicedetailState extends State<SuperAdminInvoiceDetail> {
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png',
               height: consistentAppBarHeight,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -79,7 +78,7 @@ class _InvoicedetailState extends State<SuperAdminInvoiceDetail> {
                     Row(
                       children: [
                         Text(
-                          widget.status, // Display the status from the widget
+                          widget.status,
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
@@ -129,7 +128,6 @@ class _InvoicedetailState extends State<SuperAdminInvoiceDetail> {
                   ],
                 ),
               ),
-              // The payment method section is now only shown if isPaid is true
               if (isPaid) ...[
                 const SizedBox(height: 24),
                 const Text(

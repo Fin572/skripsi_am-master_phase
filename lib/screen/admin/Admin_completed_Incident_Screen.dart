@@ -3,15 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:asset_management/widgets/company_info_card.dart';
+import 'package:http/http.dart' as http; // Reintroduced
+import 'dart:convert'; // Reintroduced
 
 class AdminCompleteIncidentScreen extends StatefulWidget {
   final Map<String, String> incident;
   final Function(Map<String, String>) onIncidentCompleted;
+  final String action; // Reintroduced
 
   const AdminCompleteIncidentScreen({
     Key? key,
     required this.incident,
     required this.onIncidentCompleted,
+    required this.action, // Reintroduced
   }) : super(key: key);
 
   @override
@@ -24,6 +28,19 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
   final TextEditingController _descriptionController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   final List<File> _selectedImages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Reintroduced original initState logic
+    if (widget.action == "Reject") {
+      _priceController.text = "none";
+    } else {
+      _priceController.text = widget.incident['value'] ?? '';
+    }
+    _picController.text = widget.incident['pic_id'] ?? '';
+    _descriptionController.text = widget.incident['description'] ?? '';
+  }
 
   @override
   void dispose() {
@@ -73,8 +90,18 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
     );
   }
 
-  void _submitCompletion() {
-    if (_priceController.text.isEmpty || _picController.text.isEmpty || _descriptionController.text.isEmpty) {
+  Future<void> _submitCompletion() async {
+    if (widget.action != "Reject" && _priceController.text.isEmpty) { // Added condition for Reject
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Price is required for submission.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    if (_picController.text.isEmpty || _descriptionController.text.isEmpty) { // Moved general validation after price check
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please fill all required fields.'),
@@ -85,20 +112,58 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
     }
 
     Map<String, String> completedIncident = Map<String, String>.from(widget.incident);
-    completedIncident['status'] = 'Completed';
-    completedIncident['price'] = _priceController.text;
-    completedIncident['pic_completed'] = _picController.text;
-    completedIncident['completion_description'] = _descriptionController.text;
-    completedIncident['completed_image_urls'] = _selectedImages.map((e) => e.path).join(',');
+    completedIncident['status'] = widget.action == "Reject" ? "Rejected" : "Completed";
+    completedIncident['value'] = _priceController.text;
+    completedIncident['pic_id'] = _picController.text;
+    completedIncident['description'] = _descriptionController.text;
+    // Convert images to base64 only if images are selected
+    String afterPhotos = '';
+    if (_selectedImages.isNotEmpty) {
+      List<String> base64Images = await Future.wait(
+        _selectedImages.map((image) async {
+          List<int> imageBytes = await image.readAsBytes();
+          return base64Encode(imageBytes);
+        }).toList(),
+      );
+      afterPhotos = base64Images.join(',');
+    }
+    completedIncident['after_photos'] = afterPhotos;
+    completedIncident['action_taken'] = widget.action; // Reintroduced
 
-    widget.onIncidentCompleted(completedIncident);
+    try {
+      final response = await http.post( // Reintroduced HTTP call
+        Uri.parse('http://assetin.my.id/skripsi/update_incidents.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'incident_id': completedIncident['incident_id'],
+          'status': completedIncident['status'],
+          'value': completedIncident['value'],
+          'pic_id': completedIncident['pic_id'],
+          'description': completedIncident['description'],
+          'after_photos': completedIncident['after_photos']!.isNotEmpty ? completedIncident['after_photos'] : null, // Send null if no images
+          'remark': completedIncident['action_taken'],
+        }),
+      );
 
-    Navigator.of(context).pop();
+      final responseData = jsonDecode(response.body);
+      print('Response Data: $responseData'); // Debug response
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        widget.onIncidentCompleted(completedIncident);
+        Navigator.of(context).pop();
+      } else {
+        throw Exception(responseData['error'] ?? 'Failed to update incident');
+      }
+    } catch (e) {
+      print('Error updating incident: $e'); // Debug error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating incident: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0;
+    const double consistentAppBarHeight = 100.0; // Consistent with NEW UI
 
     final String companyInfo = widget.incident['companyInfo']!;
     final List<String> companyParts = companyInfo.split(' - ');
@@ -131,9 +196,9 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
                       },
                     ),
                     const SizedBox(width: 16),
-                    const Text(
-                      'Complete Incident',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                    Text(
+                      '${widget.action} Incident', // Dynamic title
+                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -160,6 +225,7 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
                 label: 'Price',
                 hintText: 'Enter price (e.g., \$150.00)',
                 keyboardType: TextInputType.number,
+                isReadOnly: widget.action == "Reject", // Reintroduced conditional readOnly
               ),
               const SizedBox(height: 16),
               _buildInputField(
@@ -170,8 +236,8 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
               const SizedBox(height: 16),
               _buildInputField(
                 controller: _descriptionController,
-                label: 'Description',
-                hintText: 'Enter completion details',
+                label: widget.action == "Reject" ? 'Reason for Rejection' : 'Description', // Dynamic label
+                hintText: widget.action == "Reject" ? 'Enter reason for rejection' : 'Enter completion details', // Dynamic hint
                 isMultiline: true,
               ),
               const SizedBox(height: 20),
@@ -188,15 +254,15 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
                 child: ElevatedButton(
                   onPressed: _submitCompletion,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
+                    backgroundColor: widget.action == "Reject" ? Colors.red : Colors.blueAccent, // Dynamic color
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
-                  child: const Text(
-                    'Submit',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  child: Text(
+                    widget.action, // Dynamic button text
+                    style: const TextStyle(color: Colors.white, fontSize: 18),
                   ),
                 ),
               ),
@@ -212,6 +278,7 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
     required String label,
     String? hintText,
     bool isMultiline = false,
+    bool isReadOnly = false, // Reintroduced
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
@@ -229,6 +296,7 @@ class _AdminCompleteIncidentScreenState extends State<AdminCompleteIncidentScree
           keyboardType: keyboardType,
           maxLines: isMultiline ? null : 1,
           minLines: isMultiline ? 3 : 1,
+          readOnly: isReadOnly, // Reintroduced
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,

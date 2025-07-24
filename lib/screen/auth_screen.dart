@@ -1,3 +1,4 @@
+// auth_screen.dart
 import 'package:asset_management/screen/admin/admin_main_screen.dart';
 import 'package:asset_management/screen/main_screen.dart';
 import 'package:asset_management/screen/models/user_role.dart';
@@ -12,11 +13,13 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _loginController = TextEditingController();
+  // Renamed _loginController to _emailController for NEW UI consistency
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
-  bool _loginError = false;
+  // Renamed _loginError to _emailError for NEW UI consistency
+  bool _emailError = false;
   bool _passwordError = false;
 
   void showComingSoonPopup(BuildContext context) {
@@ -37,8 +40,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> loginUser() async {
     // Trim the input to remove any leading/trailing whitespace
-    final login = _loginController.text.trim();
+    final login = _emailController.text.trim(); // Use _emailController for 'login' parameter
     final password = _passwordController.text.trim();
+
+    // Reset error states before new login attempt
+    setState(() {
+      _emailError = false;
+      _passwordError = false;
+    });
 
     final response = await http.post(
       Uri.parse('http://assetin.my.id/skripsi/login.php'),
@@ -53,22 +62,27 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (data['status'] == 'success') {
       String role = data['role'];
+      // Assuming 'email' is also returned from the API for each user.
+      String userEmail = data['email'] ?? '$login@example.com'; // Use actual email if provided, else construct one
       Widget targetScreen;
 
       // Redirect based on role
       if (role == 'customer') {
         targetScreen = MainScreen(
-          username: login,
-          password: password,
+          userName: login,
+          userEmail: userEmail,
+          userRole: UserRole.customer,
         );
       } else if (role == 'admin') {
         targetScreen = AdminMainScreen(
           userName: login,
+          userEmail: userEmail,
           userRole: UserRole.admin,
         );
       } else if (role == 'super_admin') {
         targetScreen = SuperAdminMainScreen(
           userName: login,
+          userEmail: userEmail,
           userRole: UserRole.superAdmin,
         );
       } else {
@@ -85,8 +99,8 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } else {
       setState(() {
-        _loginError = data['status'] == 'error';
-        _passwordError = data['status'] == 'error';
+        _emailError = true; // Set _emailError for login failure
+        _passwordError = true; // Set _passwordError for login failure
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(data['message'])),
@@ -100,7 +114,7 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration( // Changed to const
           image: DecorationImage(
             image: AssetImage('assets/auth.png'),
             fit: BoxFit.cover,
@@ -118,16 +132,16 @@ class _AuthScreenState extends State<AuthScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 40), // From NEW UI
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  margin: const EdgeInsets.symmetric(horizontal: 24), // From NEW UI
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 32,
-                  ),
+                  ), // From NEW UI
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(20), // From NEW UI
                   ),
                   child: Form(
                     key: _formKey,
@@ -140,8 +154,8 @@ class _AuthScreenState extends State<AuthScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text.rich(
+                        const SizedBox(height: 8), // From NEW UI
+                        const Text.rich( // Changed to const
                           TextSpan(
                             children: [
                               TextSpan(
@@ -157,11 +171,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             ],
                           ),
                         ),
+                        // Email Field - Now uses _emailController
                         Align(
                           alignment: Alignment.centerLeft,
                           child: RichText(
-                            text: const TextSpan(
-                              text: 'Login ',
+                            text: const TextSpan( // Changed to const
+                              text: 'Email ', // From NEW UI
                               style: TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
@@ -172,11 +187,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 4), // From NEW UI
                         TextFormField(
-                          controller: _loginController,
+                          controller: _emailController, // Using _emailController
                           decoration: InputDecoration(
-                            hintText: 'Login',
+                            hintText: 'Email', // From NEW UI
                             filled: true,
                             fillColor: Colors.grey[100],
                             border: OutlineInputBorder(
@@ -185,13 +200,13 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        if (_loginError)
+                        if (_emailError) // Using _emailError
                           const Padding(
                             padding: EdgeInsets.only(top: 4, left: 4),
                             child: Align(
                               alignment: Alignment.centerRight,
                               child: Text(
-                                'Login salah',
+                                'Wrong Email', // From NEW UI
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 12,
@@ -199,12 +214,13 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 16), // From NEW UI
+                        // Password Field
                         Align(
                           alignment: Alignment.centerLeft,
                           child: RichText(
-                            text: const TextSpan(
-                              text: 'Kata sandi ',
+                            text: const TextSpan( // Changed to const
+                              text: 'Password', // From NEW UI
                               style: TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
@@ -215,12 +231,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 4), // From NEW UI
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            hintText: 'Kata Sandi',
+                            hintText: 'Password', // From NEW UI
                             filled: true,
                             fillColor: Colors.grey[100],
                             suffixIcon: IconButton(
@@ -247,7 +263,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextButton(
                               onPressed: () => showComingSoonPopup(context),
                               child: const Text(
-                                'Lupa kata sandi ?',
+                                'Forgot Password?', // From NEW UI
                                 style: TextStyle(color: Colors.blue),
                               ),
                             ),
@@ -255,7 +271,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               const Padding(
                                 padding: EdgeInsets.only(right: 8),
                                 child: Text(
-                                  'Kata sandi salah',
+                                  'Wrong Password', // From NEW UI
                                   style: TextStyle(
                                     color: Colors.red,
                                     fontSize: 12,
@@ -264,22 +280,22 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 40), // From NEW UI
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
+                            backgroundColor: const Color.fromRGBO(52, 152, 219, 1), // From NEW UI
                             minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(14), // From NEW UI
                             ),
                           ),
-                          onPressed: loginUser,
+                          onPressed: loginUser, // Uses the preserved loginUser method
                           child: const Text(
-                            'Masuk',
+                            'Login', // From NEW UI
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 24), // From NEW UI
                         const Text(
                           'Privacy Policy | Terms and Condition',
                           style: TextStyle(color: Colors.grey),

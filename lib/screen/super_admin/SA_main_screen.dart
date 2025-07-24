@@ -1,20 +1,21 @@
-// lib/screen/super_admin/super_admin_main_screen.dart
+// SA_main_screen.dart
 import 'package:asset_management/screen/models/user_role.dart';
 import 'package:asset_management/screen/qrscan.dart';
 import 'package:asset_management/screen/super_admin/SA_history.dart';
 import 'package:asset_management/screen/super_admin/SA_invoice.dart';
 import 'package:asset_management/screen/super_admin/SA_profile.dart';
 import 'package:asset_management/screen/super_admin/SA_home_page.dart';
-import 'package:asset_management/widgets/bottom_app_bar.dart';
 import 'package:flutter/material.dart';
 
 class SuperAdminMainScreen extends StatefulWidget {
   final String userName;
+  final String userEmail; // Added userEmail
   final UserRole userRole;
 
   const SuperAdminMainScreen({
     super.key,
     required this.userName,
+    required this.userEmail, // Added userEmail
     required this.userRole,
   });
 
@@ -23,61 +24,95 @@ class SuperAdminMainScreen extends StatefulWidget {
 }
 
 class _SuperAdminMainScreenState extends State<SuperAdminMainScreen> {
-  int _selectedIndex = 0;
+  int _pageIndex = 0; // Changed from _selectedIndex to _pageIndex
 
-  void _onTabSelected(int index) {
-    if (index == 2) return; // Skip the FAB placeholder slot
-    setState(() {
-      _selectedIndex = index;
-    });
+  List<Widget> get _superAdminPages => [
+        SuperAdminHomePage(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
+        SuperAdminHistory(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
+        SuperAdminInvoice(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
+        SuperAdminProfile(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
+      ];
+
+  List<Widget> get _currentPages {
+    return _superAdminPages;
   }
+
+  double get _iconSize => MediaQuery.of(context).size.width > 600 ? 32.0 : 24.0;
+  double get _fabSize => MediaQuery.of(context).size.width > 600 ? 70.0 : 56.0;
+
+  EdgeInsets get _fabPadding {
+    final screenHeight = MediaQuery.of(context).size.height;
+    return EdgeInsets.only(
+      top: screenHeight * 0.08,
+      bottom: screenHeight * 0.01,
+    );
+  }
+
+  int _mapBottomIndexToPageIndex(int index) {
+    if (index == 2) return _pageIndex; // The "empty" slot for FAB
+    if (index == 0) return 0;
+    if (index == 1) return 1;
+    if (index == 3) return 2;
+    if (index == 4) return 3;
+    return 0;
+  }
+
+  int _mapPageIndexToBottomIndex(int index) {
+    if (index == 0) return 0;
+    if (index == 1) return 1;
+    if (index == 2) return 3;
+    if (index == 3) return 4;
+    return 0;
+  }
+
+  List<BottomNavigationBarItem> get _currentBottomNavBarItems => [
+        BottomNavigationBarItem(icon: Icon(Icons.home, size: _iconSize), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.history, size: _iconSize), label: 'History'),
+        const BottomNavigationBarItem(icon: SizedBox.shrink(), label: ''),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt_long, size: _iconSize), label: 'Invoice'),
+        BottomNavigationBarItem(icon: Icon(Icons.person, size: _iconSize), label: 'Profile'),
+      ];
 
   @override
   Widget build(BuildContext context) {
-    // Map the selectedIndex to the correct page index, skipping the FAB slot
-    final List<Widget> _pages = [
-      SuperAdminHomePage(userName: widget.userName, userRole: widget.userRole, userEmail: '',),
-      SuperAdminHistory(userName: widget.userName, userRole: widget.userRole,userEmail: '',),
-      Container(), // Placeholder for FAB slot
-      SuperAdminInvoice(userName: widget.userName, userRole: widget.userRole,userEmail: '',),
-      SuperAdminProfile(userName: widget.userName, userRole: widget.userRole,userEmail: '',),
-    ];
-
-    // Adjust the index to skip the FAB slot
-    int pageIndex = _selectedIndex;
-    if (_selectedIndex > 2) {
-      pageIndex = _selectedIndex - 1;
-    }
-
     return Scaffold(
-      body: _pages[pageIndex], // Display the selected page
-      bottomNavigationBar: CustomBottomAppBar(
-        selectedIndex: _selectedIndex,
-        onTabSelected: _onTabSelected,
-        onFabPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => QrScannerPage()),
-          );
-        },
-        role: 'super_admin', // Set role for super admin-specific navbar customization
-      ),
+      body: SafeArea(child: _currentPages[_pageIndex]), // Used _pageIndex
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(top: 80),
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => QrScannerPage()),
-            );
-          },
-          backgroundColor: Colors.blue,
-          elevation: 3,
-          child: const Icon(Icons.qr_code, color: Colors.white, size: 30),
-          shape: const CircleBorder(),
+        padding: _fabPadding,
+        child: SizedBox(
+          width: _fabSize,
+          height: _fabSize,
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => QrScannerPage()));
+            },
+            backgroundColor: Colors.blue,
+            elevation: 3,
+            shape: const CircleBorder(),
+            child: Icon(Icons.qr_code, color: Colors.white, size: _iconSize * 1.2),
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        child: BottomNavigationBar(
+          currentIndex: _mapPageIndexToBottomIndex(_pageIndex),
+          onTap: (index) {
+            if (index == 2) return;
+            setState(() => _pageIndex = _mapBottomIndexToPageIndex(index));
+          },
+          type: BottomNavigationBarType.fixed,
+          items: _currentBottomNavBarItems,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.black,
+          selectedFontSize: 12,
+          unselectedFontSize: 10,
+          backgroundColor: Colors.white,
+          showUnselectedLabels: true,
+        ),
+      ),
     );
   }
 }

@@ -4,10 +4,10 @@ import 'package:flutter_map/flutter_map.dart'; // For map display
 import 'package:latlong2/latlong.dart'; // For LatLng
 import 'package:asset_management/screen/models/asset.dart'; // Import the updated Asset model
 
-class AssetDetailViewScreen extends StatelessWidget {
+class SAAssetDetailViewScreen extends StatelessWidget {
   final Asset asset; // This screen receives a full Asset object
 
-  const AssetDetailViewScreen({Key? key, required this.asset}) : super(key: key);
+  const SAAssetDetailViewScreen({Key? key, required this.asset}) : super(key: key);
 
   // Helper for displaying a single info row
   Widget _buildInfoRow(String label, String value) {
@@ -119,7 +119,7 @@ class AssetDetailViewScreen extends StatelessWidget {
                 children: [
                   // --- Asset Details Card ---
                   Card(
-                    color: Colors.white,
+                    color: Colors.white, 
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     child: Padding(

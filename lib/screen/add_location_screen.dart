@@ -144,7 +144,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                         subdomains: const ['a', 'b', 'c'], // Use subdomains to distribute load and reduce errors
                         userAgentPackageName: 'com.example.app', // Replace with your package name
                         additionalOptions: const {
-                          'User-Agent': 'AssetManagementApp/1.0 (contact@yourdomain.com)', // Explicit user agent with contact info for OSM compliance
+                          'User-Agent': 'AssetManagementApp/1.0', // Explicit user agent to comply with OSM policies
                         },
                       ),
                     ],
@@ -204,13 +204,13 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                     _buildTextField(
                       controller: _locationNameController,
                       labelText: 'Location name',
-                      hintText: 'Kantor pusat cakung',
+                      hintText: 'Location name',
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(
                       controller: _addressController,
                       labelText: 'Address',
-                      hintText: 'Jl pertiwi 12',
+                      hintText: 'Address',
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(
@@ -222,7 +222,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                     _buildTextField(
                       controller: _personInChargeController,
                       labelText: 'Person in charge',
-                      hintText: 'Davin',
+                      hintText: 'PIC',
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(

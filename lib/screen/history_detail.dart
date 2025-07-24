@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 class HistoryDetailScreen extends StatelessWidget {
   final String status;
-  HistoryDetailScreen({required this.status});
+  // Add incident_id as a required named parameter
+  final int incident_id;
+
+  HistoryDetailScreen({Key? key, required this.status, required this.incident_id}) : super(key: key);
   final String ticketNumber = "#000001";
   final String requestNumber = "#001001";
   final String companyName = "PT Dunia Persada";
@@ -18,7 +21,7 @@ class HistoryDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFF5F6FA), // From NEW UI
       body: Column(
         children: [
           Stack(
@@ -37,10 +40,10 @@ class HistoryDetailScreen extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Icon(Icons.arrow_back, color: Colors.white),
+                        child: const Icon(Icons.arrow_back, color: Colors.white), // Changed to const
                       ),
-                      SizedBox(width: 16),
-                      Text(
+                      const SizedBox(width: 16), // Changed to const
+                      const Text(
                         'Incident',
                         style: TextStyle(
                           color: Colors.white,
@@ -56,79 +59,79 @@ class HistoryDetailScreen extends StatelessWidget {
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20), // From NEW UI
               child: Column(
                 children: [
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16), // Changed to const
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16), // From NEW UI
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                      gradient: const LinearGradient( // Changed to const
+                        colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)], // From NEW UI
+                        begin: Alignment.topLeft, // From NEW UI
+                        end: Alignment.bottomRight, // From NEW UI
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      borderRadius: BorderRadius.circular(16), // From NEW UI
+                      boxShadow: const [ // Changed to const
                         BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: Offset(0, 2),
+                          color: Colors.black12, // From NEW UI
+                          blurRadius: 6, // From NEW UI
+                          offset: Offset(0, 2), // From NEW UI
                         )
                       ],
                     ),
                     child: Column(
                       children: [
                         CircleAvatar(
-                          radius: 24,
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.apartment,
-                              size: 30, color: Colors.blue),
+                          radius: 24, // From NEW UI
+                          backgroundColor: Colors.white, // From NEW UI
+                          child: const Icon(Icons.apartment, // Changed to const
+                              size: 30, color: Colors.blue), // From NEW UI
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8), // Changed to const
                         Text(ticketNumber,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold)),
+                            style: const TextStyle( // Changed to const
+                                color: Colors.white, // From NEW UI
+                                fontWeight: FontWeight.bold)), // From NEW UI
                         Text(companyName,
                             style:
-                                TextStyle(color: Colors.white70, fontSize: 14)),
+                                const TextStyle(color: Colors.white70, fontSize: 14)), // Changed to const
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center, // From NEW UI
                           children: [
-                            Icon(Icons.desktop_windows,
-                                color: Colors.white70, size: 16),
-                            SizedBox(width: 4),
+                            const Icon(Icons.desktop_windows, // Changed to const
+                                color: Colors.white70, size: 16), // From NEW UI
+                            const SizedBox(width: 4), // Changed to const
                             Text(assetCount,
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 14)),
+                                style: const TextStyle( // Changed to const
+                                    color: Colors.white70, fontSize: 14)), // From NEW UI
                           ],
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16), // Changed to const
                   _buildStatusBox(),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16), // Changed to const
                   _buildReadOnlyField(ticketNumber),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12), // Changed to const
                   _buildReadOnlyField(requestNumber),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12), // Changed to const
                   _buildReadOnlyField(category),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12), // Changed to const
                   _buildReadOnlyField(description, maxLines: 3),
-                  SizedBox(height: 20),
-                  Align(
+                  const SizedBox(height: 20), // Changed to const
+                  const Align( // Changed to const
                     alignment: Alignment.centerLeft,
                     child: Text("Upload Images",
                         style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8), // Changed to const
                   GridView.builder(
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(), // Changed to const
                     itemCount: uploadedImages.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( // Changed to const
                       crossAxisCount: 2,
                       childAspectRatio: 1,
                       crossAxisSpacing: 12,
@@ -140,7 +143,7 @@ class HistoryDetailScreen extends StatelessWidget {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(12), // From NEW UI
                             image: DecorationImage(
                               image: AssetImage(uploadedImages[index]),
                               fit: BoxFit.cover,
@@ -150,7 +153,7 @@ class HistoryDetailScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24), // Changed to const
                 ],
               ),
             ),
@@ -163,20 +166,20 @@ class HistoryDetailScreen extends StatelessWidget {
   Widget _buildStatusBox() {
     if (status == "done") {
       return Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12), // From NEW UI
         decoration: BoxDecoration(
-          color: Color(0xFFE6F4EA),
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFFE6F4EA), // From NEW UI
+          borderRadius: BorderRadius.circular(12), // From NEW UI
         ),
-        child: Row(
+        child: const Row( // Changed to const
           children: [
-            Icon(Icons.check, color: Colors.green),
-            SizedBox(width: 12),
+            Icon(Icons.check, color: Colors.green), // From NEW UI
+            SizedBox(width: 12), // From NEW UI
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Done", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("Your request has done"),
+                Text("Done", style: TextStyle(fontWeight: FontWeight.bold)), // From NEW UI
+                Text("Your request has done"), // From NEW UI
               ],
             )
           ],
@@ -184,27 +187,27 @@ class HistoryDetailScreen extends StatelessWidget {
       );
     } else if (status == "rejected") {
       return Container(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12), // From NEW UI
         decoration: BoxDecoration(
-          color: Color(0xFFFFEDE7),
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFFFFEDE7), // From NEW UI
+          borderRadius: BorderRadius.circular(12), // From NEW UI
         ),
-        child: Row(
+        child: const Row( // Changed to const
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            SizedBox(width: 12),
+            Icon(Icons.warning_amber_rounded, color: Colors.orange), // From NEW UI
+            SizedBox(width: 12), // From NEW UI
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Attention", style: TextStyle(fontWeight: FontWeight.bold)),
-                Text("Your request has been rejected"),
+                Text("Attention", style: TextStyle(fontWeight: FontWeight.bold)), // From NEW UI
+                Text("Your request has been rejected"), // From NEW UI
               ],
             )
           ],
         ),
       );
     } else {
-      return SizedBox.shrink();
+      return const SizedBox.shrink(); // Changed to const
     }
   }
 
@@ -214,12 +217,12 @@ class HistoryDetailScreen extends StatelessWidget {
       maxLines: maxLines,
       controller: TextEditingController(text: text),
       decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.grey[200],
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        filled: true, // From NEW UI
+        fillColor: Colors.grey[200], // From NEW UI
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), // From NEW UI
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(10), // From NEW UI
+          borderSide: BorderSide.none, // From NEW UI
         ),
       ),
     );
@@ -254,7 +257,7 @@ void showImageFullscreen(
               top: 40,
               right: 16,
               child: IconButton(
-                icon: Icon(Icons.close, color: Colors.white, size: 30),
+                icon: const Icon(Icons.close, color: Colors.white, size: 30), // Changed to const
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
