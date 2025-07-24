@@ -2,11 +2,11 @@
 import 'package:asset_management/screen/models/organization.dart';
 import 'package:asset_management/screen/models/user_role.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Preserved
-import 'dart:convert'; // Preserved
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SuperAdminRegister extends StatefulWidget {
-  final List<Organization> organizations; // Preserved required parameter
+  final List<Organization> organizations;
 
   const SuperAdminRegister({Key? key, required this.organizations}) : super(key: key);
 
@@ -18,18 +18,21 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _selectedRole;
   Organization? _selectedOrganization;
-  bool _obscurePassword = true; // Added for password visibility
-  bool _isLoading = false; // Preserved
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+  List<Organization> _organizations = [];
 
   @override
   void initState() {
     super.initState();
-    // No _fetchOrganizations here, assuming organizations are passed or fetched elsewhere initially.
-    // If widget.organizations is empty, this screen might need to fetch them.
+    _organizations = widget.organizations;
+    if (_organizations.isEmpty) {
+      _fetchOrganizations();
+    }
   }
 
   @override
@@ -37,57 +40,97 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
-    _phoneController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
-  Future<void> _registerUser() async { // Preserved
+  Future<void> _fetchOrganizations() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/fetch_organizations.php'));
+      print('Fetch Organizations Status: ${response.statusCode}');
+      print('Fetch Organizations Body: ${response.body}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _organizations = data.map((item) => Organization(id: item['organization_id'], name: item['organization_name'])).toList();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load organizations: Status ${response.statusCode}')));
+      }
+    } catch (e) {
+      print('Fetch Organizations Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error fetching organizations: $e')));
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
-      final response = await http.post(
-        Uri.parse('http://assetin.my.id/skripsi/register_user.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'user_email': _emailController.text,
-          'user_password': _passwordController.text,
-          'user_name': _nameController.text,
-          'user_phone': _phoneController.text,
-          'user_role': _selectedRole,
-          'organization_id': _selectedOrganization?.id,
-        }),
-      );
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      final responseData = jsonDecode(response.body);
-      if (responseData['success']) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User ${_nameController.text} registered successfully!')),
+      try {
+        final response = await http.post(
+          Uri.parse('http://assetin.my.id/skripsi/register_user.php'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': _usernameController.text,
+            'name': _nameController.text,
+            'email': _emailController.text,
+            'password': _passwordController.text,
+            'role': _selectedRole,
+            'organization_id': _selectedOrganization!.id,
+          }),
         );
-        _emailController.clear();
-        _passwordController.clear();
-        _nameController.clear();
-        _phoneController.clear();
+
+        print('Status Code: ${response.statusCode}');
+        print('Response Body: ${response.body}');
+
+        if (response.body.isEmpty || !response.body.startsWith('{')) {
+          throw Exception('Invalid response from server: ${response.body}');
+        }
+
+        final responseData = jsonDecode(response.body);
+        if (responseData['message'] == 'User registered successfully') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('User ${_nameController.text} registered successfully!')),
+          );
+          _emailController.clear();
+          _passwordController.clear();
+          _nameController.clear();
+          _usernameController.clear();
+          setState(() {
+            _selectedRole = null;
+            _selectedOrganization = null;
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Registration failed: ${responseData['error']}')),
+          );
+        }
+      } catch (e) {
+        print('Error during registration: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration error: $e')),
+        );
+      } finally {
         setState(() {
-          _selectedRole = null;
-          _selectedOrganization = null;
+          _isLoading = false;
         });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${responseData['message']}')),
-        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Standard height for image app bars
+    const double consistentAppBarHeight = 100.0;
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -103,16 +146,16 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
             ),
             SafeArea(
               child: Center(
-                  child: const Text(
-                    "Register",
-                    style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
+                child: const Text(
+                  "Register",
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
+              ),
             ),
           ],
         ),
       ),
-      body: _isLoading // Preserved loading indicator
+      body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -165,13 +208,12 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(
-                      controller: _phoneController,
-                      label: 'Phone Number',
-                      hintText: 'Enter phone number',
-                      keyboardType: TextInputType.phone,
+                      controller: _usernameController,
+                      label: 'Username',
+                      hintText: 'Enter username',
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter phone number';
+                          return 'Please enter username';
                         }
                         return null;
                       },
@@ -198,19 +240,24 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    if (widget.organizations.isNotEmpty) // Only show if organizations are available
+                    if (_organizations.isNotEmpty)
                       _buildDropdownField<Organization>(
                         label: 'Organization',
                         value: _selectedOrganization,
-                        hintText: 'Select Organization (Optional)',
-                        items: widget.organizations,
+                        hintText: 'Select Organization',
+                        items: _organizations,
                         itemToString: (org) => org.name,
                         onChanged: (newValue) {
                           setState(() {
                             _selectedOrganization = newValue;
                           });
                         },
-                        // Validator is optional for organization as per "Optional" hint
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select an organization';
+                          }
+                          return null;
+                        },
                       ),
                     const SizedBox(height: 30),
                     SizedBox(
@@ -234,7 +281,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                 ),
               ),
             ),
-          );
+    );
   }
 
   Widget _buildTextField({
