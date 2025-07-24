@@ -457,18 +457,6 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               ),
                               SizedBox(height: fieldSpacing),
 
-                              // Phone Number - Ditambahkan kembali dari SA_register.dart asli
-                              _buildTextField(
-                                _phoneController,
-                                'Phone Number*', // Label dari asli
-                                'Enter phone number', // Hint dari asli
-                                TextInputType.phone,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) return 'Phone number is required';
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: fieldSpacing), // Spasi setelah phone number
                             ],
                           ),
                         ),
