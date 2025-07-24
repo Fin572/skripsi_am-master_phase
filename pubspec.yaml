@@ -42,7 +42,6 @@ dependencies:
   shared_preferences: ^2.5.3
   mysql1: any
   http: any
-  permission_handler: ^10.0.0
 
 dev_dependencies:
   flutter_test:
