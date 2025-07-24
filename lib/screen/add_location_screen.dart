@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart'; 
+import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'; // for json decoding
-import 'package:asset_management/screen/models/location.dart';
-
+import 'package:asset_management/screen/models/location.dart'; // Ensure this model exists and matches your data structure
 
 class AddLocationScreen extends StatefulWidget {
   const AddLocationScreen({Key? key}) : super(key: key);
@@ -14,10 +13,11 @@ class AddLocationScreen extends StatefulWidget {
 }
 
 class _AddLocationScreenState extends State<AddLocationScreen> {
-  MapController? mapController; 
+  MapController? mapController;
   // Example: Monas, Jakarta. Use LatLng from latlong2
   final LatLng _center = const LatLng(-6.1753924, 106.8271528);
-  // LatLng for the current center of the map, used for submission
+  // LatLng for the current center of the map, used for submission and display
+  LatLng _currentMapCenter = const LatLng(-6.1753924, 106.8271528); // Initialize with default
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _locationNameController = TextEditingController();
@@ -29,25 +29,25 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
   @override
   void initState() {
     super.initState();
-    // No explicit Marker object needed for a central pin in flutter_map
-    // We'll overlay an Icon widget directly.
   }
 
   Future<void> _submitLocation() async {
     if (_formKey.currentState!.validate()) {
-      // Hardcoded values for testing
-      String organizationId = "2";  // Fixed organization_id
-      String locationPICId = "budi";  // Fixed user_id
+      // Hardcoded values for testing (from original file)
+      String organizationId = "2";
+      String locationPICId = _personInChargeController.text; // Using PIC from form now
 
       final response = await http.post(
         Uri.parse('http://assetin.my.id/skripsi/add_location.php'), // Your server URL
         body: {
-          'organization_id': organizationId,  // Send organization_id
+          'organization_id': organizationId,
           'location_name': _locationNameController.text,
           'address': _addressController.text,
           'detail': _detailController.text,
-          'locationPIC_id': locationPICId, // Send locationPIC_id
+          'locationPIC_id': locationPICId,
           'phone_number': _phoneNumberController.text,
+          'latitude': _currentMapCenter.latitude.toString(), // Pass current map center
+          'longitude': _currentMapCenter.longitude.toString(), // Pass current map center
         },
       );
 
@@ -55,12 +55,12 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
 
       if (data['status'] == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location added successfully!')),
+          const SnackBar(content: Text('Location added successfully!')),
         );
-        Navigator.pop(context);  // Close the screen after success
+        Navigator.pop(context); // Close the screen after success
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add location')),
+          SnackBar(content: Text('Failed to add location: ${data['message']}')),
         );
       }
     }
@@ -79,20 +79,43 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      backgroundColor: const Color.fromARGB(245, 245, 245, 245),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(95.0), // Height similar to your example
+        child: Stack(
+          children: [
+            // Background image for the AppBar
+            Image.asset(
+              'assets/bg_image.png', // Ensure this path is correct
+              height: 95,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            // Content of the AppBar (back button and title)
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Add location',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        title: const Text(
-          'Add location',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -110,26 +133,20 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                         // Update the current map center when the map moves
                         if (position.center != null) {
                           setState(() {
+                            _currentMapCenter = position.center!;
                           });
                         }
                       },
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        subdomains: const ['a', 'b', 'c'], // Use subdomains to distribute load and reduce errors
                         userAgentPackageName: 'com.example.app', // Replace with your package name
+                        additionalOptions: const {
+                          'User-Agent': 'AssetManagementApp/1.0 (contact@yourdomain.com)', // Explicit user agent with contact info for OSM compliance
+                        },
                       ),
-                      // You can add markers here if needed, but for a central pin, an overlay is simpler
-                      // MarkerLayer(
-                      //   markers: [
-                      //     Marker(
-                      //       point: _currentMapCenter, // Use current map center
-                      //       width: 80,
-                      //       height: 80,
-                      //       child: Icon(Icons.location_on, color: Colors.blue, size: 40),
-                      //     ),
-                      //   ],
-                      // ),
                     ],
                   ),
                   const Center(
@@ -153,17 +170,29 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                           ),
                         ],
                       ),
-                      child: TextField(
+                      child: const TextField(
                         decoration: InputDecoration(
                           hintText: 'Search',
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: Icon(Icons.search),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
+                          contentPadding: EdgeInsets.symmetric(vertical: 15.0),
                         ),
                       ),
                     ),
                   ),
                 ],
+              ),
+            ),
+            // Display the current geolocation below the map
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Current Geolocation: Lat: ${_currentMapCenter.latitude.toStringAsFixed(6)}, Long: ${_currentMapCenter.longitude.toStringAsFixed(6)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
             Padding(
@@ -193,7 +222,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                     _buildTextField(
                       controller: _personInChargeController,
                       labelText: 'Person in charge',
-                      hintText: 'Npina',
+                      hintText: 'Davin',
                     ),
                     const SizedBox(height: 15),
                     _buildTextField(
@@ -211,6 +240,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                               Navigator.pop(context);
                             },
                             style: OutlinedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(245, 255, 255, 255),
                               side: const BorderSide(color: Colors.grey),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
@@ -218,7 +248,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                               ),
                             ),
                             child: const Text('Cancel',
-                                style: TextStyle(color: Colors.grey)),
+                                style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))),
                           ),
                         ),
                         const SizedBox(width: 15),
@@ -226,7 +256,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                           child: ElevatedButton(
                             onPressed: _submitLocation,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
+                              backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
                               padding: const EdgeInsets.symmetric(vertical: 15),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -260,13 +290,15 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
       decoration: InputDecoration(
         labelText: '$labelText*',
         hintText: hintText,
+        filled: true,
+        fillColor: Colors.white,
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.grey[400]!),
           borderRadius: BorderRadius.circular(8.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 2.0),
+          borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0),
           borderRadius: BorderRadius.circular(8.0),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
