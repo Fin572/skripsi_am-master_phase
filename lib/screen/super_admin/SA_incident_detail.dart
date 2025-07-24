@@ -3,6 +3,8 @@ import 'package:asset_management/widgets/company_info_card.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For base64 decoding (preserved)
 import 'package:http/http.dart' as http; // Preserved
+import 'dart:io'; // For SocketException
+import 'dart:async'; // Added for TimeoutException
 
 class SAIncidentDetailScreen extends StatefulWidget {
   final Map<String, String> incident;
@@ -40,40 +42,66 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
     _uploadedImages = images;
   }
 
-  Future<void> _approveIncident(String newStatus, String newSubStatus) async {
+  Future<void> _approveIncident(String newStatusSa, String newSubStatus) async {
     final url = Uri.parse('http://assetin.my.id/skripsi/approve_incident_sa.php');
-    final incidentId = widget.incident['incident_id'];
+    final int? incidentId = int.tryParse(widget.incident['incident_id'] ?? '0');
+    if (incidentId == null || incidentId == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid incident ID.')),
+      );
+      return;
+    }
     final currentStatusFromIncident = widget.incident['status'];
+
+    final payload = {
+      'incident_id': incidentId,
+      'status_sa': newStatusSa, // Changed from 'status' to 'status_sa' to match PHP
+      'sub_status': newSubStatus,
+      'current_status': currentStatusFromIncident,
+      'remark': newSubStatus,
+    };
+
+    print('Request payload: ${jsonEncode(payload)}'); // Added for debugging
 
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'incident_id': incidentId,
-          'status': newStatus,
-          'sub_status': newSubStatus,
-          'current_status': currentStatusFromIncident,
-          'remark': newSubStatus, // Remark can be set to sub_status for simplicity
-        }),
-      );
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 30));
 
-      final data = jsonDecode(response.body);
-      if (data['success']) {
-        final Map<String, String> updatedIncident = Map<String, String>.from(widget.incident);
-        updatedIncident['status'] = newStatus;
-        updatedIncident['subStatus'] = newSubStatus;
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-        // Notify parent to remove this incident from its list as it's now "processed" by SA
-        if (widget.onIncidentUpdated != null) {
-          widget.onIncidentUpdated!(updatedIncident); // SA Incident Screen akan menghapus ini dari daftar
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          final Map<String, String> updatedIncident = Map<String, String>.from(widget.incident);
+          updatedIncident['status'] = newStatusSa; // Update status based on status_sa
+          updatedIncident['subStatus'] = newSubStatus;
+
+          if (widget.onIncidentUpdated != null) {
+            widget.onIncidentUpdated!(updatedIncident);
+          }
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to approve/reject: ${data['message'] ?? 'Unknown error'}')),
+          );
         }
-        Navigator.pop(context); // Kembali ke daftar insiden
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to approve/reject: ${data['message']}')),
-        );
+        throw Exception('Failed to update incident: Status code ${response.statusCode} - ${response.body}');
       }
+    } on TimeoutException catch (e) {
+      print('Timeout error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Request timed out. Please check your connection or server status.')),
+      );
+    } on SocketException catch (e) {
+      print('Network error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Network error. Please check your internet connection.')),
+      );
     } catch (e) {
       print('Error approving/rejecting incident: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,17 +120,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
     final String displayTicketNumber = companyParts.length > 1 ? companyParts[1].trim() : '#000000';
     final String displayDeviceCount = widget.incident['title'] != null && widget.incident['title']!.contains('CCTV') ? '4 Devices' : 'N/A Devices';
 
-    // OPSI 2: Tombol Approve/Reject selalu muncul untuk status 'Completed'
     bool isCurrentIncidentCompleted = (widget.incident['status'] == 'Completed');
-    // Jika SA ingin bisa Approve/Reject yang Rejected juga:
     bool isCurrentIncidentRejected = (widget.incident['status'] == 'Rejected');
 
-
-    // Menampilkan tombol jika statusnya adalah 'Completed' atau 'Rejected'
-    // Dan belum disetujui secara final (subStatus bukan 'Approved by SA')
     bool showSAActionButtons = (isCurrentIncidentCompleted || isCurrentIncidentRejected) &&
                                (widget.incident['subStatus'] != 'Approved by SA');
-
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -186,7 +208,6 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
               isMultiline: true,
             ),
 
-            // Display Price, PIC, Completion Description if available (for 'Completed' status)
             if (isCurrentIncidentCompleted)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,17 +215,17 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'Price',
-                    value: widget.incident['value'] ?? 'N/A', // Assuming 'value' from backend is price
+                    value: widget.incident['value'] ?? 'N/A',
                   ),
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'PIC (Completion)',
-                    value: widget.incident['pic_id'] ?? 'N/A', // Assuming 'pic_id' from backend is PIC completion
+                    value: widget.incident['pic_id'] ?? 'N/A',
                   ),
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'Completion Details',
-                    value: widget.incident['action_taken'] ?? 'No completion details provided.', // Assuming 'action_taken' for completion details
+                    value: widget.incident['action_taken'] ?? 'No completion details provided.',
                     isMultiline: true,
                   ),
                 ],
@@ -220,25 +241,21 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
 
             const SizedBox(height: 20),
 
-            // Action Buttons for SA
             if (showSAActionButtons)
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Logika SA Reject
-                        String newMainStatus;
-                        // SA Reject 'Completed' -> kembali ke 'On Progress'
-                        // SA Reject 'Rejected' -> kembali ke 'Assigned'
+                        String newStatusSa;
                         if (isCurrentIncidentCompleted) {
-                           newMainStatus = 'On Progress';
+                          newStatusSa = 'On Progress'; // Align with backend's allowed transition
                         } else if (isCurrentIncidentRejected) {
-                           newMainStatus = 'Assigned';
+                          newStatusSa = 'Assigned'; // Align with backend's allowed transition
                         } else {
-                           newMainStatus = 'On Progress'; // Fallback
+                          newStatusSa = 'On Progress'; // Fallback
                         }
-                        _approveIncident(newMainStatus, 'Rejected by SA'); // Sub-status menandakan SA menolak
+                        _approveIncident(newStatusSa, 'Rejected by SA');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -257,11 +274,15 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Logika SA Approve
-                        // SA Approve 'Completed' -> tetap 'Completed', subStatus 'Approved by SA'
-                        // SA Approve 'Rejected' -> tetap 'Rejected', subStatus 'Approved by SA'
-                        String newMainStatus = widget.incident['status']!; // Status utama tidak berubah
-                        _approveIncident(newMainStatus, 'Approved by SA'); // Sub-status menandakan SA setuju
+                        String newStatusSa;
+                        if (isCurrentIncidentCompleted) {
+                          newStatusSa = 'Approved by Admin'; // Align with backend's allowed transition
+                        } else if (isCurrentIncidentRejected) {
+                          newStatusSa = 'Rejected by Admin'; // Align with backend's allowed transition
+                        } else {
+                          newStatusSa = 'On Progress'; // Fallback
+                        }
+                        _approveIncident(newStatusSa, 'Approved by SA');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -319,7 +340,6 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
   }
 
   Widget _buildImageGrid() {
-    // Memproses imageUrls dari 'before_photos' dan 'after_photos'
     List<String> allImagePaths = [];
     if (widget.incident['before_photos'] != null && widget.incident['before_photos']!.isNotEmpty) {
       allImagePaths.addAll(widget.incident['before_photos']!.split(',').where((s) => s.isNotEmpty));
@@ -328,7 +348,6 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
       allImagePaths.addAll(widget.incident['after_photos']!.split(',').where((s) => s.isNotEmpty));
     }
 
-    // Jika tidak ada gambar dari backend, gunakan gambar dummy
     final List<Map<String, String>> displayImages = allImagePaths.isNotEmpty
         ? allImagePaths.map((path) => {'path': path, 'type': 'dynamic'}).toList()
         : [
@@ -351,24 +370,21 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
       itemBuilder: (context, index) {
         final Map<String, String> imageData = displayImages[index];
         final String imagePath = imageData['path']!;
-        final String imageType = imageData['type'] ?? 'dynamic'; // Default to 'dynamic' for paths from backend
+        final String imageType = imageData['type'] ?? 'dynamic';
 
-        // Tentukan label gambar yang lebih relevan
         String imageLabel;
         if (imageData.containsKey('label')) {
-            imageLabel = imageData['label']!; // Gunakan label jika ada (untuk dummy)
-        } else if (imageType == 'dynamic' && index < allImagePaths.length) { // Hanya untuk gambar dari backend
+            imageLabel = imageData['label']!;
+        } else if (imageType == 'dynamic' && index < allImagePaths.length) {
             imageLabel = _getLabelForBackendImage(index);
         } else {
-            imageLabel = 'Image ${index + 1}'; // Label umum
+            imageLabel = 'Image ${index + 1}';
         }
 
         Widget imageWidget;
         if (imageType == 'asset') {
-          // Gambar lokal dari assets
           imageWidget = Image.asset(imagePath, fit: BoxFit.cover);
         } else if (imagePath.startsWith('http')) {
-          // Gambar dari URL (jika ada)
           imageWidget = Image.network(
             imagePath,
             fit: BoxFit.cover,
@@ -382,7 +398,6 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
             },
           );
         } else if (imagePath.isNotEmpty && RegExp(r'^[A-Za-z0-9+/=]+$').hasMatch(imagePath)) {
-          // Gambar Base64
           try {
             imageWidget = Image.memory(
               base64Decode(imagePath),
@@ -393,12 +408,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
             imageWidget = Container(
               color: Colors.grey[200],
               child: const Center(
-                child: Icon(Icons.error, color: Colors.red), // Icon error jika decode gagal
+                child: Icon(Icons.error, color: Colors.red),
               ),
             );
           }
         } else {
-          // Fallback jika path tidak dikenali atau kosong
           imageWidget = Container(
             color: Colors.grey[200],
             child: const Center(
@@ -426,11 +440,9 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
     );
   }
 
-  // Helper untuk mendapatkan label gambar yang lebih relevan
   String _getLabelForBackendImage(int index) {
-      if (index == 0) return 'Before Image (1)'; // Asumsi gambar pertama adalah "before"
-      if (index == 1) return 'After Image (1)'; // Asumsi gambar kedua adalah "after"
-      // Tambahkan lebih banyak logika jika ada lebih banyak slot gambar dari backend
-      return 'Image ${index + 1}'; // Label umum untuk gambar dinamis lainnya
+      if (index == 0) return 'Before Image (1)';
+      if (index == 1) return 'After Image (1)';
+      return 'Image ${index + 1}';
   }
 }
