@@ -1,15 +1,13 @@
 // SA_incident_detail.dart
-// sa_detail_screen.dart
 import 'package:asset_management/widgets/company_info_card.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For base64 decoding (preserved)
 import 'package:http/http.dart' as http; // Preserved
 
 class SAIncidentDetailScreen extends StatefulWidget {
-  final Map<String, String> incident; // Changed type to Map<String, String>
+  final Map<String, String> incident;
   final String currentTabStatus;
-  // Callback function to notify parent when incident status is updated
-  final Function(Map<String, String> updatedIncident)? onIncidentUpdated; // Updated type
+  final Function(Map<String, String> updatedIncident)? onIncidentUpdated;
 
   const SAIncidentDetailScreen({
     Key? key,
@@ -23,7 +21,7 @@ class SAIncidentDetailScreen extends StatefulWidget {
 }
 
 class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
-  late List<String> _uploadedImages; // Will be initialized dynamically
+  late List<String> _uploadedImages;
 
   @override
   void initState() {
@@ -32,8 +30,6 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
   }
 
   void _initializeUploadedImages() {
-    // Initialize _uploadedImages with data from the incident
-    // Combines before_photos and after_photos
     List<String> images = [];
     if (widget.incident['before_photos'] != null && widget.incident['before_photos']!.isNotEmpty) {
       images.addAll(widget.incident['before_photos']!.split(',').where((s) => s.isNotEmpty));
@@ -44,89 +40,69 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
     _uploadedImages = images;
   }
 
-  Future<void> _approveIncident(String newStatus, String newSubStatus) async { // Modified signature
-    final url = Uri.parse('http://assetin.my.id/skripsi/approve_incident_sa.php'); // Preserved endpoint
+  Future<void> _approveIncident(String newStatus, String newSubStatus) async {
+    final url = Uri.parse('http://assetin.my.id/skripsi/approve_incident_sa.php');
     final incidentId = widget.incident['incident_id'];
-    final currentStatusFromIncident = widget.incident['status']; // Get current status from incident data
+    final currentStatusFromIncident = widget.incident['status'];
 
     try {
-      final response = await http.post( // Preserved HTTP call
+      final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'incident_id': incidentId,
-          'status': newStatus, // New main status to set
-          'sub_status': newSubStatus, // New sub-status to set
-          'current_status': currentStatusFromIncident, // Pass current status of incident
-          'remark': newSubStatus, // Assuming remark is the sub_status for simplicity for now
+          'status': newStatus,
+          'sub_status': newSubStatus,
+          'current_status': currentStatusFromIncident,
+          'remark': newSubStatus, // Remark can be set to sub_status for simplicity
         }),
       );
 
       final data = jsonDecode(response.body);
       if (data['success']) {
-        // Update the local incident data and notify the parent
-        final Map<String, String> updatedIncident = Map<String, String>.from(widget.incident); // Ensure type is correct
+        final Map<String, String> updatedIncident = Map<String, String>.from(widget.incident);
         updatedIncident['status'] = newStatus;
-        updatedIncident['subStatus'] = newSubStatus; // Update subStatus in the map
+        updatedIncident['subStatus'] = newSubStatus;
+
+        // Notify parent to remove this incident from its list as it's now "processed" by SA
         if (widget.onIncidentUpdated != null) {
-          widget.onIncidentUpdated!(updatedIncident); // Notify parent
+          widget.onIncidentUpdated!(updatedIncident); // SA Incident Screen akan menghapus ini dari daftar
         }
-        Navigator.pop(context); // Return to the previous screen
+        Navigator.pop(context); // Kembali ke daftar insiden
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to approve/reject: ${data['message']}')),
         );
       }
     } catch (e) {
-      print('Error approving/rejecting incident: $e'); // Debug print
+      print('Error approving/rejecting incident: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error approving/rejecting incident: $e')),
       );
     }
   }
 
-  // Simplified and consolidated update status logic for UI
-  void _updateIncidentStatus(String newStatus, String? newSubStatus) {
-    // This function acts as an intermediary for UI state update and then calls the backend interaction.
-    // It is mostly for local UI updates before the backend call confirms the change.
-    // The actual backend approval/rejection happens in _approveIncident.
-
-    // If the action is "Approve" (SA approves Admin's action), we directly call _approveIncident
-    // If the action is "Reject" (SA rejects Admin's action), we also call _approveIncident with new statuses
-    if (newStatus == 'Approved by SA' || newSubStatus == 'Approved' || newSubStatus == 'Rejected') {
-      _approveIncident(newStatus, newSubStatus ?? ''); // Call backend with appropriate status
-    }
-    // No local setState here for main status, as _approveIncident will trigger _fetchIncidents on parent
-    // which then updates the main list.
-  }
-
-
-  // New callback for when AdminCompleteIncidentScreen finishes (Preserved from admin_incident_detail_screen.dart)
-  void _handleAdminCompleted(Map<String, String> updatedIncident) {
-    // This callback is triggered when AdminCompleteIncidentScreen submits.
-    // It should update the incident's status to 'Completed' in the parent AdminIncidentScreen.
-    if (widget.onIncidentUpdated != null) {
-      widget.onIncidentUpdated!(updatedIncident);
-    }
-    // No need to pop here, AdminCompleteIncidentScreen already popped this screen.
-  }
-
-
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Consistent with NEW UI
+    const double consistentAppBarHeight = 100.0;
 
     final String companyInfoRaw = widget.incident['companyInfo'] ?? 'PT Dunia Persada - #000000';
     List<String> companyParts = companyInfoRaw.split(' - ');
     final String displayCompanyName = companyParts.isNotEmpty ? companyParts[0].trim() : 'N/A';
     final String displayTicketNumber = companyParts.length > 1 ? companyParts[1].trim() : '#000000';
-    final String displayDeviceCount = widget.incident['title']!.contains('CCTV') ? '4 Devices' : 'N/A Devices'; // More dynamic
+    final String displayDeviceCount = widget.incident['title'] != null && widget.incident['title']!.contains('CCTV') ? '4 Devices' : 'N/A Devices';
 
-    bool isAwaitingSAReview = (widget.incident['subStatus'] == 'Awaiting SA Review'); // Check from incident data
+    // OPSI 2: Tombol Approve/Reject selalu muncul untuk status 'Completed'
+    bool isCurrentIncidentCompleted = (widget.incident['status'] == 'Completed');
+    // Jika SA ingin bisa Approve/Reject yang Rejected juga:
+    bool isCurrentIncidentRejected = (widget.incident['status'] == 'Rejected');
 
-    // Determine if the current incident's main status needs SA review buttons
-    // The previous logic for showApproveButtonForAssigned/Completed/Rejected is now consolidated into isAwaitingSAReview
-    // as Super Admin only acts on "Awaiting SA Review".
+
+    // Menampilkan tombol jika statusnya adalah 'Completed' atau 'Rejected'
+    // Dan belum disetujui secara final (subStatus bukan 'Approved by SA')
+    bool showSAActionButtons = (isCurrentIncidentCompleted || isCurrentIncidentRejected) &&
+                               (widget.incident['subStatus'] != 'Approved by SA');
+
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -140,7 +116,7 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                print('Error loading bg_image.png: $error'); // Debug print
+                print('Error loading bg_image.png: $error');
                 return Container(
                   height: consistentAppBarHeight,
                   width: double.infinity,
@@ -164,7 +140,7 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                     ),
                     const SizedBox(width: 16),
                     const Text(
-                      'Incident Detail', // Changed title
+                      'Incident Detail',
                       style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -210,27 +186,25 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
               isMultiline: true,
             ),
 
-            // Display Price, PIC, Completion Description if available (for 'Completed' status from backend)
-            // Using incident['value'], incident['pic_id'], incident['description'] from initial fetch
-            // and assuming 'Completed' as primary status indicates these might be filled.
-            if (widget.incident['status'] == 'Completed' && (widget.incident['value']?.isNotEmpty ?? false))
+            // Display Price, PIC, Completion Description if available (for 'Completed' status)
+            if (isCurrentIncidentCompleted)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'Price',
-                    value: widget.incident['value']!,
+                    value: widget.incident['value'] ?? 'N/A', // Assuming 'value' from backend is price
                   ),
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'PIC (Completion)',
-                    value: widget.incident['pic_id'] ?? 'N/A', // Using pic_id as PIC completion
+                    value: widget.incident['pic_id'] ?? 'N/A', // Assuming 'pic_id' from backend is PIC completion
                   ),
                   const SizedBox(height: 10),
                   _buildReadOnlyTextField(
                     label: 'Completion Details',
-                    value: widget.incident['description'] ?? 'No completion details provided.', // Using original description field for completion details if not separate
+                    value: widget.incident['action_taken'] ?? 'No completion details provided.', // Assuming 'action_taken' for completion details
                     isMultiline: true,
                   ),
                 ],
@@ -242,30 +216,29 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            _buildImageGrid(), // Updated to use the list populated in initState
+            _buildImageGrid(),
 
             const SizedBox(height: 20),
 
-            // Action Buttons based on status and subStatus
-            if (isAwaitingSAReview) // Only show SA approval/rejection buttons if it's awaiting SA review
+            // Action Buttons for SA
+            if (showSAActionButtons)
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Super Admin rejects the admin's action (rejection or completion)
-                        // Reverts status to previous state, subStatus becomes 'Rejected' by SA
-                        // If it was 'Rejected' by Admin, new status is 'Assigned', subStatus 'Rejected'
-                        // If it was 'Completed' by Admin, new status is 'On Progress', subStatus 'Rejected'
+                        // Logika SA Reject
                         String newMainStatus;
-                        if (widget.incident['status'] == 'Rejected') {
-                          newMainStatus = 'Assigned'; // Revert rejected to assigned
-                        } else if (widget.incident['status'] == 'Completed') {
-                          newMainStatus = 'On Progress'; // Revert completed to on progress
+                        // SA Reject 'Completed' -> kembali ke 'On Progress'
+                        // SA Reject 'Rejected' -> kembali ke 'Assigned'
+                        if (isCurrentIncidentCompleted) {
+                           newMainStatus = 'On Progress';
+                        } else if (isCurrentIncidentRejected) {
+                           newMainStatus = 'Assigned';
                         } else {
-                          newMainStatus = 'Assigned'; // Default or fallback
+                           newMainStatus = 'On Progress'; // Fallback
                         }
-                        _approveIncident(newMainStatus, 'Rejected'); // Backend will handle marking it rejected by SA
+                        _approveIncident(newMainStatus, 'Rejected by SA'); // Sub-status menandakan SA menolak
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -284,18 +257,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Super Admin approves the admin's action (rejection or completion)
-                        // This moves the incident to archive or finalizes its status.
-                        // Based on original status, new status becomes 'Approved by SA' or final.
-                        String newFinalStatus;
-                        if (widget.incident['status'] == 'Rejected') {
-                          newFinalStatus = 'Rejected'; // Final status remains 'Rejected'
-                        } else if (widget.incident['status'] == 'Completed') {
-                          newFinalStatus = 'Completed'; // Final status remains 'Completed'
-                        } else {
-                          newFinalStatus = 'Approved by SA'; // Fallback
-                        }
-                        _approveIncident(newFinalStatus, 'Approved by SA'); // Backend will archive based on this subStatus
+                        // Logika SA Approve
+                        // SA Approve 'Completed' -> tetap 'Completed', subStatus 'Approved by SA'
+                        // SA Approve 'Rejected' -> tetap 'Rejected', subStatus 'Approved by SA'
+                        String newMainStatus = widget.incident['status']!; // Status utama tidak berubah
+                        _approveIncident(newMainStatus, 'Approved by SA'); // Sub-status menandakan SA setuju
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
@@ -353,6 +319,25 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
   }
 
   Widget _buildImageGrid() {
+    // Memproses imageUrls dari 'before_photos' dan 'after_photos'
+    List<String> allImagePaths = [];
+    if (widget.incident['before_photos'] != null && widget.incident['before_photos']!.isNotEmpty) {
+      allImagePaths.addAll(widget.incident['before_photos']!.split(',').where((s) => s.isNotEmpty));
+    }
+    if (widget.incident['after_photos'] != null && widget.incident['after_photos']!.isNotEmpty) {
+      allImagePaths.addAll(widget.incident['after_photos']!.split(',').where((s) => s.isNotEmpty));
+    }
+
+    // Jika tidak ada gambar dari backend, gunakan gambar dummy
+    final List<Map<String, String>> displayImages = allImagePaths.isNotEmpty
+        ? allImagePaths.map((path) => {'path': path, 'type': 'dynamic'}).toList()
+        : [
+            {'path': 'assets/cctv_front.png', 'type': 'asset', 'label': 'Front View'},
+            {'path': 'assets/cctv_rear.png', 'type': 'asset', 'label': 'Rear View'},
+            {'path': 'assets/cctv_top.png', 'type': 'asset', 'label': 'Top View'},
+            {'path': 'assets/cctv_bottom.png', 'type': 'asset', 'label': 'Bottom View'},
+          ];
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -362,56 +347,72 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
         mainAxisSpacing: 10,
         childAspectRatio: 1.0,
       ),
-      itemCount: _uploadedImages.length, // Use the dynamically loaded images
+      itemCount: displayImages.length,
       itemBuilder: (context, index) {
-        final String imageData = _uploadedImages[index];
-        final String imageLabel = _getImageLabel(index); // Get label based on index or type
+        final Map<String, String> imageData = displayImages[index];
+        final String imagePath = imageData['path']!;
+        final String imageType = imageData['type'] ?? 'dynamic'; // Default to 'dynamic' for paths from backend
+
+        // Tentukan label gambar yang lebih relevan
+        String imageLabel;
+        if (imageData.containsKey('label')) {
+            imageLabel = imageData['label']!; // Gunakan label jika ada (untuk dummy)
+        } else if (imageType == 'dynamic' && index < allImagePaths.length) { // Hanya untuk gambar dari backend
+            imageLabel = _getLabelForBackendImage(index);
+        } else {
+            imageLabel = 'Image ${index + 1}'; // Label umum
+        }
+
+        Widget imageWidget;
+        if (imageType == 'asset') {
+          // Gambar lokal dari assets
+          imageWidget = Image.asset(imagePath, fit: BoxFit.cover);
+        } else if (imagePath.startsWith('http')) {
+          // Gambar dari URL (jika ada)
+          imageWidget = Image.network(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: const Center(
+                  child: Icon(Icons.broken_image, color: Colors.grey),
+                ),
+              );
+            },
+          );
+        } else if (imagePath.isNotEmpty && RegExp(r'^[A-Za-z0-9+/=]+$').hasMatch(imagePath)) {
+          // Gambar Base64
+          try {
+            imageWidget = Image.memory(
+              base64Decode(imagePath),
+              fit: BoxFit.cover,
+            );
+          } catch (e) {
+            print('Error decoding base64 image: $e');
+            imageWidget = Container(
+              color: Colors.grey[200],
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red), // Icon error jika decode gagal
+              ),
+            );
+          }
+        } else {
+          // Fallback jika path tidak dikenali atau kosong
+          imageWidget = Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: Icon(Icons.image_not_supported, color: Colors.grey),
+            ),
+          );
+        }
 
         return Column(
           children: [
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8.0),
-                child: imageData.startsWith('http')
-                    ? Image.network(
-                        imageData,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.broken_image, color: Colors.grey),
-                            ),
-                          );
-                        },
-                      )
-                    : (imageData.isNotEmpty && RegExp(r'^[A-Za-z0-9+/=]+$').hasMatch(imageData))
-                        ? Image.memory(
-                            base64Decode(imageData),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Base64 decode error: $error for path: $imageData');
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              );
-                            },
-                          )
-                        : Image.asset( // Fallback for local assets or empty
-                            imageData.isNotEmpty ? imageData : 'assets/image_placeholder.png', // A generic placeholder
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Asset error or empty path: $error for path: $imageData');
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: Icon(Icons.broken_image, color: Colors.grey),
-                                ),
-                              );
-                            },
-                          ),
+                child: imageWidget,
               ),
             ),
             const SizedBox(height: 5),
@@ -425,12 +426,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
     );
   }
 
-  // Helper to determine image label based on index (can be expanded to check content type if needed)
-  String _getImageLabel(int index) {
-    if (index == 0) return 'Before Image (1)';
-    if (index == 1) return 'After Image (1)';
-    if (index == 2) return 'Before Image (2)';
-    if (index == 3) return 'After Image (2)';
-    return 'Image ${index + 1}';
+  // Helper untuk mendapatkan label gambar yang lebih relevan
+  String _getLabelForBackendImage(int index) {
+      if (index == 0) return 'Before Image (1)'; // Asumsi gambar pertama adalah "before"
+      if (index == 1) return 'After Image (1)'; // Asumsi gambar kedua adalah "after"
+      // Tambahkan lebih banyak logika jika ada lebih banyak slot gambar dari backend
+      return 'Image ${index + 1}'; // Label umum untuk gambar dinamis lainnya
   }
 }
