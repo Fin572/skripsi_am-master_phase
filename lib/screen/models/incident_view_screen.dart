@@ -1,12 +1,12 @@
 // incident_view_screen.dart
 // lib/screens/incident_view_screen.dart
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // This import is still present but its usage for formatting is not directly visible in the provided snippets.
 import 'package:asset_management/screen/models/incident_ticket.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-// Removed: import 'dart:convert';
-// Removed: import 'dart:typed_data';
 
 class IncidentViewScreen extends StatelessWidget {
   final IncidentTicket incidentTicket;
@@ -180,8 +180,8 @@ class IncidentViewScreen extends StatelessWidget {
               ),
               itemCount: 4, // Fixed to 4 slots as per the image, even if less uploaded
               itemBuilder: (context, index) {
-                // Assuming imageUrls now contain direct paths (either asset or file)
-                final imagePath = index < incidentTicket.imageUrls.length
+                // Assuming imageUrls now contain base64 strings
+                final imageBase64 = index < incidentTicket.imageUrls.length
                     ? incidentTicket.imageUrls[index]
                     : null;
                 // Access _imageLabels using the class name since it's static
@@ -195,17 +195,27 @@ class IncidentViewScreen extends StatelessWidget {
                     border: Border.all(color: Colors.grey[300]!),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: imagePath != null
+                  child: imageBase64 != null
                       ? Stack(
                           fit: StackFit.expand,
                           children: [
-                            // Using Image.file as per NEW UI, assuming imagePath is a valid File path
-                            Image.file(
-                              File(imagePath),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                // Removed detailed prints, kept generic error icon
-                                return const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 40));
+                            // Decode base64 and use Image.memory
+                            Builder(
+                              builder: (context) {
+                                try {
+                                  final Uint8List bytes = base64Decode(imageBase64);
+                                  return Image.memory(
+                                    bytes,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      print('Image render error for index $index: $error');
+                                      return const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 40));
+                                    },
+                                  );
+                                } catch (e) {
+                                  print('Decode error for image $index: $e');
+                                  return const Center(child: Icon(Icons.error, color: Colors.red, size: 40));
+                                }
                               },
                             ),
                             Align(

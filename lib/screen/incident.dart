@@ -132,6 +132,10 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                     print('Invalid short base64 string for item ${item['incident_id']}');
                     return null;
                   }
+                  // Tambahkan padding jika diperlukan untuk base64 yang valid
+                  while (base64Str.length % 4 != 0) {
+                    base64Str += '=';
+                  }
                   try {
                     base64Decode(base64Str); // Test decode tanpa simpan, untuk verifikasi
                     return base64Str;
