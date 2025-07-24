@@ -1,14 +1,26 @@
 import 'dart:io';
+import 'package:asset_management/widgets/company_info_card.dart'; // Ensure this widget is available
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
-import 'package:asset_management/screen/models/location.dart';
-import 'package:asset_management/screen/models/asset.dart';
-import 'package:asset_management/screen/models/incident_ticket.dart';
+import 'package:asset_management/screen/models/location.dart'; // Assuming Location model is defined here or imported
+import 'package:asset_management/screen/models/asset.dart'; // Assuming Asset model is defined here or imported
+import 'package:asset_management/screen/models/incident_ticket.dart'; // Assuming IncidentTicket model is defined here or imported
 
 class IncidentDetailScreen extends StatefulWidget {
-  const IncidentDetailScreen({Key? key, required List<Location> availableLocations, required List<Asset> availableAssets}) : super(key: key);
+  // Original constructor arguments, kept for compatibility if needed elsewhere
+  final List<Location> availableLocations;
+  final List<Asset> availableAssets;
+
+  const IncidentDetailScreen({
+    Key? key,
+    // These are now optional as data is fetched internally.
+    // However, if the calling screen always provides them, you can keep them required.
+    // For a hybrid approach, making them optional and using fetched data as fallback is safer.
+    this.availableLocations = const [],
+    this.availableAssets = const [],
+  }) : super(key: key);
 
   @override
   State<IncidentDetailScreen> createState() => _IncidentDetailScreenState();
@@ -22,18 +34,18 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
   final TextEditingController _assetNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  final List<File?> _incidentImages = List.filled(6, null);
+  final List<File?> _incidentImages = List.filled(6, null); // Max 6 images based on NEW UI example
   final List<String> _imageLabels = [
-    'Tampak Depan',
-    'Tampak Belakang',
-    'Tampak Atas',
-    'Tampak Bawah',
-    'Lainnya 1',
-    'Lainnya 2',
+    'Front View', // From NEW UI
+    'Rear View', // From NEW UI
+    'Top View', // From NEW UI
+    'Bottom View', // From NEW UI
+    'Other 1', // Label for additional image slots
+    'Other 2', // Label for additional image slots
   ];
 
-  List<Location> _availableLocations = [];
-  List<Asset> _availableAssets = [];
+  List<Location> _availableLocations = []; // Fetched from API
+  List<Asset> _availableAssets = []; // Fetched from API
   bool _isLoadingLocations = true;
   bool _isLoadingAssets = true;
 
@@ -152,13 +164,13 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                   id: device['id'].toString(),
                   name: device['name'] as String? ?? 'Unknown',
                   locationId: locationId,
-                  category: 'Device',
-                  locationInfo: '',
-                  latitude: 0.0,
-                  longitude: 0.0,
-                  personInCharge: '',
-                  phoneNumber: '',
-                  barcodeData: '',
+                  category: device['category'] as String? ?? 'Device', // Populate category
+                  locationInfo: device['location_info'] as String? ?? '', // Populate location info
+                  latitude: (device['latitude'] as num?)?.toDouble() ?? 0.0, // Populate latitude
+                  longitude: (device['longitude'] as num?)?.toDouble() ?? 0.0, // Populate longitude
+                  personInCharge: device['person_in_charge'] as String? ?? '', // Populate PIC
+                  phoneNumber: device['phone_number'] as String? ?? '', // Populate phone number
+                  barcodeData: device['barcode_data'] as String? ?? '', // Populate barcode
                 );
               }).toList();
               print('Available assets: $_availableAssets');
@@ -239,7 +251,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       request.fields['location_id'] = _selectedLocation!.id.toString();
       request.fields['asset_id'] = _selectedAsset!.id;
       request.fields['description'] = _descriptionController.text;
-      request.fields['status'] = 'Assigned';
+      request.fields['status'] = 'Assigned'; // Default status for new tickets
       request.fields['asset_name'] = _assetNameController.text;
 
       final List<String> imageFieldNames = ['image_0', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5'];
@@ -270,7 +282,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
           var data = json.decode(responseBody.body);
           if (data['status'] == 'success') {
             final newIncidentTicket = IncidentTicket(
-              ticketId: data['id'].toString(),
+              ticketId: data['id'].toString(), // Use actual ID from response
               asset: _selectedAsset!,
               location: _selectedLocation!,
               description: _descriptionController.text,
@@ -282,6 +294,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(data['message'])),
             );
+            // Pop with the new ticket object for the Incident screen to handle
             Navigator.pop(context, newIncidentTicket);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -378,45 +391,79 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
+  Future<bool?> _showCancelConfirmationDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Are you sure?'),
+          content: const Text('Do you want to discard this ticket creation?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[100], // From NEW UI
       appBar: AppBar(
-        toolbarHeight: 100,
+        toolbarHeight: 100, // From NEW UI
         title: const Text(
-          "Incident",
+          "Incident", // From NEW UI
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
-        flexibleSpace: const Image(
+        flexibleSpace: const Image( // From NEW UI
           image: AssetImage('assets/bg_image.png'),
           fit: BoxFit.cover,
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.transparent, // From NEW UI
+        elevation: 0, // From NEW UI
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // From NEW UI
+          onPressed: () async {
+            final bool? confirmed = await _showCancelConfirmationDialog(); // Uses new dialog
+            if (confirmed == true) {
+              Navigator.pop(context, false); // Signal cancellation to previous screen
+            }
           },
         ),
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0), // From NEW UI
         child: Form(
           key: _formKey,
-          onChanged: _validateForm,
+          onChanged: _validateForm, // From NEW UI
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _companycard(),
+              // Using CompanyInfoCard as in NEW UI, remove _companycard()
+              const CompanyInfoCard(
+                ticketNumber: '#000001', // Example static value
+                companyName: 'PT Dunia Persada', // Example static value
+                deviceCount: '0 Device', // Example static value
+              ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 20), // From NEW UI
               _isLoadingLocations
                   ? const Center(child: CircularProgressIndicator())
                   : _availableLocations.isEmpty
@@ -434,7 +481,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                           onChanged: (Location? newValue) {
                             setState(() {
                               _selectedLocation = newValue;
-                              _selectedAsset = null;
+                              _selectedAsset = null; // Reset asset if location changes
                               _assetNameController.clear();
                               print('Selected location: $_selectedLocation');
                               _validateForm();
@@ -445,7 +492,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                             return value == null ? 'Location ID is required' : null;
                           },
                         ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 15), // From NEW UI
 
               _isLoadingAssets
                   ? const Center(child: CircularProgressIndicator())
@@ -453,8 +500,8 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                       ? const Center(child: Text('No assets available'))
                       : _buildDropdownField<Asset>(
                           value: _selectedAsset,
-                          hintText: 'Select Asset ID',
-                          labelText: 'Asset ID',
+                          hintText: 'Select Device ID',
+                          labelText: 'Device ID',
                           items: _availableAssets
                               .where((asset) {
                                 if (_selectedLocation == null) return true;
@@ -480,19 +527,19 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                             return value == null ? 'Asset ID is required' : null;
                           },
                         ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 15), // From NEW UI
 
               _buildTextField(
                 controller: _assetNameController,
-                labelText: 'Asset Name',
+                labelText: 'Device Name', // From NEW UI
                 readOnly: true,
-                hintText: 'Auto-filled from Asset ID',
+                hintText: 'Auto-filled from Device ID',
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 15), // From NEW UI
 
               _buildTextField(
                 controller: _descriptionController,
-                labelText: 'Description',
+                labelText: 'Description', // From NEW UI
                 hintText: 'Enter incident description',
                 maxLines: 5,
                 validator: (value) {
@@ -500,57 +547,66 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                   return value == null || value.trim().isEmpty ? 'Description is required' : null;
                 },
               ),
-              const SizedBox(height: 20),
 
-              const Text('Upload Images', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
+              const SizedBox(height: 20), // From NEW UI
+
+              const Text('Upload Images', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // From NEW UI
+              const SizedBox(height: 10), // From NEW UI
               GridView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                physics: const NeverScrollableScrollPhysics(), // From NEW UI
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( // From NEW UI
                   crossAxisCount: 2,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.2,
                 ),
-                itemCount: _incidentImages.length + 1,
+                itemCount: _incidentImages.length, // Only iterate through defined slots
                 itemBuilder: (context, index) {
-                  if (index < _incidentImages.length) {
-                    return _buildImageUploadSlot(index);
-                  } else {
-                    return _buildAddMoreButton();
-                  }
+                  return _buildImageUploadSlot(index); // Use the NEW UI style slot builder
                 },
               ),
-              const SizedBox(height: 30),
+              // Moved "Add More" button outside GridView.builder for more control as per NEW UI
+              if (_incidentImages.any((file) => file == null)) // Only show if there's an empty slot to fill
+                Padding(
+                  padding: const EdgeInsets.only(top: 10.0),
+                  child: _buildAddMoreButton(), // Use the NEW UI style "Add More" button
+                ),
+              const SizedBox(height: 30), // From NEW UI
 
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () async {
+                        final bool? confirmed = await _showCancelConfirmationDialog(); // Use new dialog
+                        if (confirmed == true) {
+                          Navigator.pop(context, false);
+                        }
+                      },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        side: const BorderSide(color: Colors.grey), // From NEW UI
+                        backgroundColor: const Color.fromARGB(245, 255, 255, 255), // From NEW UI
+                        padding: const EdgeInsets.symmetric(vertical: 15), // From NEW UI
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
+                          borderRadius: BorderRadius.circular(10.0), // From NEW UI
                         ),
                       ),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                      child: const Text('Cancel', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))), // From NEW UI
                     ),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 15), // From NEW UI
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _canSubmit ? _submitTicket : null,
+                      onPressed: _canSubmit ? _submitTicket : null, // Disable if not valid
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _canSubmit ? Colors.blueAccent : Colors.grey,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: _canSubmit ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey, // From NEW UI
+                        padding: const EdgeInsets.symmetric(vertical: 15), // From NEW UI
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
+                          borderRadius: BorderRadius.circular(10.0), // From NEW UI
                         ),
                       ),
-                      child: const Text('Submit', style: TextStyle(color: Colors.white)),
+                      child: const Text('Submit', style: TextStyle(color: Colors.white)), // From NEW UI
                     ),
                   ),
                 ],
@@ -562,73 +618,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
-  Widget _companycard() {
-    final String ticketNumber = '#000001';
-    final String companyName = 'PT Dunia Persada';
-    final String assetCount = '0 Asset';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4FC3F7), Color(0xFF0288D1)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            )
-          ],
-        ),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.apartment, size: 30, color: Colors.blue),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              ticketNumber,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              companyName,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.desktop_windows, color: Colors.white70, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  assetCount,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // Updated _buildTextField to match NEW UI
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -643,21 +633,23 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       keyboardType: keyboardType,
       readOnly: readOnly,
       maxLines: maxLines,
+      minLines: maxLines > 1 ? maxLines : null, // Ensures multiline for maxLines > 1
       decoration: InputDecoration(
         labelText: '$labelText*',
         hintText: hintText,
+        floatingLabelBehavior: FloatingLabelBehavior.always, // From NEW UI
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[400]!),
-          borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide(color: Colors.grey[400]!), // From NEW UI
+          borderRadius: BorderRadius.circular(8.0), // From NEW UI
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blueAccent, width: 2.0),
-          borderRadius: BorderRadius.circular(8.0),
+          borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // From NEW UI
+          borderRadius: BorderRadius.circular(8.0), // From NEW UI
         ),
-        filled: readOnly,
-        fillColor: readOnly ? Colors.grey[200] : null,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        filled: true, // From NEW UI
+        fillColor: readOnly ? Colors.grey[200] : Colors.white, // From NEW UI
+        contentPadding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0), // From NEW UI
       ),
       validator: validator ??
           (value) {
@@ -669,6 +661,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
+  // Updated _buildDropdownField to match NEW UI
   Widget _buildDropdownField<T>({
     required T? value,
     required String hintText,
@@ -684,14 +677,16 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
         hintText: hintText,
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[400]!),
-          borderRadius: BorderRadius.circular(8.0),
+          borderSide: BorderSide(color: Colors.grey[400]!), // From NEW UI
+          borderRadius: BorderRadius.circular(8.0), // From NEW UI
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.blueAccent, width: 2.0),
-          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          borderSide: BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // From NEW UI
+          borderRadius: BorderRadius.all(Radius.circular(8.0)), // From NEW UI
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        filled: true, // From NEW UI
+        fillColor: Colors.white, // From NEW UI
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // From NEW UI
       ),
       items: items,
       onChanged: onChanged,
@@ -699,6 +694,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
+  // Updated _buildImageUploadSlot to match NEW UI
   Widget _buildImageUploadSlot(int index) {
     final file = _incidentImages[index];
 
@@ -708,23 +704,64 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
-          border: Border.all(color: Colors.grey[300]!),
+          color: Colors.white, // From NEW UI
+          borderRadius: BorderRadius.circular(8.0), // From NEW UI
+          border: Border.all(color: Colors.grey[300]!), // From NEW UI
         ),
-        child: file == null
-            ? const Center(child: Icon(Icons.add_a_photo, size: 30, color: Colors.grey))
-            : Stack(
+        child: file != null
+            ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.file(file, fit: BoxFit.cover),
-                  Positioned(
-                    top: 4,
-                    right: 4,
+                  ClipRRect( // From NEW UI
+                    borderRadius: BorderRadius.circular(8.0), // From NEW UI
+                    child: Image.file(file, fit: BoxFit.cover),
+                  ),
+                  Positioned( // From NEW UI
+                    top: 5,
+                    right: 5,
                     child: GestureDetector(
                       onTap: () => _removeImage(index),
-                      child: const Icon(Icons.close, color: Colors.red, size: 20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4), // From NEW UI
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.8), // From NEW UI
+                          shape: BoxShape.circle, // From NEW UI
+                        ),
+                        child: const Icon(
+                          Icons.delete, // From NEW UI
+                          color: Colors.white, // From NEW UI
+                          size: 18, // From NEW UI
+                        ),
+                      ),
                     ),
+                  ),
+                  Align( // From NEW UI
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 4.0), // From NEW UI
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.5), // From NEW UI
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)), // From NEW UI
+                      ),
+                      child: Text(
+                        _imageLabels[index], // From NEW UI
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white, fontSize: 12), // From NEW UI
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column( // From NEW UI
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.image, size: 40, color: Colors.grey[400]), // From NEW UI
+                  const SizedBox(height: 5), // From NEW UI
+                  Text(
+                    _imageLabels[index], // From NEW UI
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12), // From NEW UI
                   ),
                 ],
               ),
@@ -732,15 +769,39 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
+  // Updated _buildAddMoreButton to match NEW UI
   Widget _buildAddMoreButton() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: const Center(
-        child: Icon(Icons.add, size: 30, color: Colors.grey),
+    // Only show "Add More" if there's at least one empty slot within the fixed 6 slots
+    bool hasEmptySlot = _incidentImages.any((file) => file == null);
+    if (!hasEmptySlot) {
+      return const SizedBox.shrink(); // Hide the button if all 6 slots are filled
+    }
+
+    return GestureDetector(
+      onTap: () {
+        // Find the first empty slot to add an image
+        int firstEmptyIndex = _incidentImages.indexWhere((file) => file == null);
+        if (firstEmptyIndex != -1) {
+          _showImageSourceSelection(firstEmptyIndex);
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white, // From NEW UI
+          borderRadius: BorderRadius.circular(8.0), // From NEW UI
+          border: Border.all(color: const Color.fromRGBO(52, 152, 219, 1), width: 2), // From NEW UI
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, size: 40, color: Color.fromRGBO(52, 152, 219, 1)), // From NEW UI
+            const SizedBox(height: 5), // From NEW UI
+            const Text(
+              'Add More', // From NEW UI
+              style: TextStyle(color: Color.fromRGBO(52, 152, 219, 1), fontSize: 14), // From NEW UI
+            ),
+          ],
+        ),
       ),
     );
   }

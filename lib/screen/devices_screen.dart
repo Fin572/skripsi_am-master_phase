@@ -1,10 +1,10 @@
 import 'package:asset_management/screen/asset_devices_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert'; 
+import 'dart:convert';
 import 'package:asset_management/screen/add_location_screen.dart';
-import 'package:asset_management/screen/models/location.dart'; 
-import 'package:asset_management/widgets/company_info_card.dart'; 
+import 'package:asset_management/screen/models/location.dart';
+import 'package:asset_management/widgets/company_info_card.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({Key? key}) : super(key: key);
@@ -17,10 +17,18 @@ class _DevicesScreenState extends State<DevicesScreen> {
   List<Map<String, dynamic>> _locations = []; // List to store fetched locations
   bool _isLoading = true; // To manage loading state
   bool _showSuccessPopup = false;
+  bool _isEditing = false; // New state variable for edit mode
+  Set<String> _selectedLocationIds = {}; // Stores IDs of selected locations for deletion
+
 
   // This method will fetch locations from the database
   Future<void> _fetchLocations() async {
-    final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_location.php')); // Changed IP to 192.168.1.10
+    setState(() {
+      _isLoading = true;
+      _locations.clear(); // Clear existing data to prevent duplicates on refresh
+      _selectedLocationIds.clear(); // Clear selections on refresh
+    });
+    final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_location.php'));
 
     print('Location API Response status: ${response.statusCode}');
     print('Location API Response body: ${response.body}');
@@ -31,7 +39,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
       if (data['status'] == 'success') {
         setState(() {
           _locations = List<Map<String, dynamic>>.from(data['locations']);
-          print('Fetched locations: $_locations'); // Added debug log
+          print('Fetched locations: $_locations');
           _isLoading = false;
         });
       } else {
@@ -52,6 +60,57 @@ class _DevicesScreenState extends State<DevicesScreen> {
     }
   }
 
+  Future<void> _deleteLocations() async {
+    if (_selectedLocationIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No locations selected for deletion.')),
+      );
+      return;
+    }
+
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text('Are you sure you want to delete ${_selectedLocationIds.length} selected location(s)?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false); // No
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Yes
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      // Implement actual deletion logic via API call for selected IDs
+      // For now, simulating deletion from local list
+      setState(() {
+        _locations.removeWhere((location) => _selectedLocationIds.contains(location['location_id'].toString()));
+        _selectedLocationIds.clear();
+        if (_locations.isEmpty) {
+          _isEditing = false; // Exit edit mode if all items are deleted
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Selected location(s) deleted.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +126,6 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
     if (newLocation != null) {
       setState(() {
-        // You can add new location to the list here if needed
         _showSuccessPopup = true;
       });
 
@@ -78,178 +136,255 @@ class _DevicesScreenState extends State<DevicesScreen> {
           });
         }
       });
+      _fetchLocations(); // Refresh the list after adding a new location
     }
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditing = !_isEditing;
+      if (!_isEditing) {
+        _selectedLocationIds.clear(); // Clear selection when exiting edit mode
+      }
+    });
+  }
+
+  void _toggleSelectLocation(String locationId) {
+    setState(() {
+      if (_selectedLocationIds.contains(locationId)) {
+        _selectedLocationIds.remove(locationId);
+      } else {
+        _selectedLocationIds.add(locationId);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final String companyId = '#000001';
-    final String companyName = 'PT Dunia Persada';
-    final String assetCount = '0 Asset';
+    // Calculate total assets dynamically (assuming 'deviceCount' is available in location data)
+    final totalAssetsCount = _locations.fold(0, (sum, location) => sum + (int.tryParse(location['deviceCount']?.toString() ?? '0') ?? 0));
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color.fromARGB(245, 245, 245, 245), // From NEW UI
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(95.0), // Consistent height
+        child: Stack(
+          children: [
+            Image.asset(
+              'assets/bg_image.png',
+              height: 95,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Devices',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(), // Pushes actions to the right
+                    // Show delete icon only when editing and items are selected
+                    if (_isEditing && _selectedLocationIds.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.white),
+                        onPressed: _deleteLocations,
+                      ),
+                    // Show edit icon only if there are items to edit, or if currently editing to exit
+                    if (_locations.isNotEmpty || _isEditing)
+                      IconButton(
+                        icon: Icon(_isEditing ? Icons.done_all : Icons.edit, color: Colors.white),
+                        onPressed: _toggleEditMode,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Stack(
         children: [
           Column(
             children: [
-              Stack(
-                children: [
-                  Image.asset(
-                    'assets/bg_image.png',
-                    height: 95,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: const Icon(Icons.arrow_back, color: Colors.white),
-                          ),
-                          const SizedBox(width: 16),
-                          const Text(
-                            'Devices',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-
-                      // Custom widget for company info
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                        child: CompanyInfoCard(
-                          ticketNumber: '#000001',
-                          companyName: 'PT Dunia Persada',
-                          deviceCount: '0 Asset',
-                        ),
-                      ),
-
-                      // Display locations fetched from server
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: _locations.map((location) {
-                            print('Rendering location: $location'); // Added debug log
-                            return Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.business, size: 40, color: Colors.grey),
-                                    const SizedBox(width: 15),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            location['name']?.toString() ?? 'Unknown', // Added toString() for safety
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                          ),
-                                          Text(
-                                            '#${location['location_id']?.toString() ?? 'Unknown'}', // Added toString() for safety
-                                            style: const TextStyle(fontSize: 14, color: Colors.grey),
-                                          ),
-                                          const SizedBox(height: 5),
-                                          Row(
-                                            children: const [
-                                              Icon(Icons.laptop_mac, size: 18),
-                                              SizedBox(width: 5),
-                                              Text('4 Devices', style: TextStyle(fontSize: 14)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => const AssetDevicesScreen(showSuccessPopup: true),
-                                          ),
-                                        );
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Text('Detail', style: TextStyle(color: Colors.blue)),
-                                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-
-                      // Show no data if no locations found
-                      if (_locations.isEmpty && !_isLoading)
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.4,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset('assets/nodata.png', width: 100),
-                                const SizedBox(height: 20),
-                                const Text(
-                                  "No data available",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 80),
-                    ],
-                  ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: CompanyInfoCard(
+                  ticketNumber: '#000001',
+                  companyName: 'PT Dunia Persada',
+                  deviceCount: '$_isLoading' == 'true' ? 'Loading...' : '$totalAssetsCount Device', // Dynamic asset count
                 ),
               ),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _locations.isEmpty
+                        ? SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.4,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset('assets/nodata.png', width: 100),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    "No data available",
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            itemCount: _locations.length,
+                            itemBuilder: (context, index) {
+                              final location = _locations[index];
+                              final locationId = location['location_id']?.toString() ?? 'Unknown';
+                              final isSelected = _selectedLocationIds.contains(locationId);
+
+                              return GestureDetector(
+                                onLongPress: () {
+                                  if (!_isEditing) {
+                                    _toggleEditMode();
+                                  }
+                                  _toggleSelectLocation(locationId);
+                                },
+                                onTap: () {
+                                  if (_isEditing) {
+                                    _toggleSelectLocation(locationId);
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const AssetDevicesScreen(showSuccessPopup: false),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: Card(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    side: _isEditing && isSelected
+                                        ? const BorderSide(color: Colors.blue, width: 2.0)
+                                        : BorderSide.none,
+                                  ),
+                                  color: Colors.white, // From NEW UI
+                                  elevation: 2,
+                                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        if (_isEditing)
+                                          Checkbox(
+                                            value: isSelected,
+                                            onChanged: (bool? value) {
+                                              _toggleSelectLocation(locationId);
+                                            },
+                                            activeColor: Colors.blue,
+                                          ),
+                                        const Icon(Icons.business, size: 40, color: Colors.grey),
+                                        const SizedBox(width: 15),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                location['name']?.toString() ?? 'Unknown',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                              ),
+                                              Text(
+                                                '#${locationId}',
+                                                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                                              ),
+                                              const SizedBox(height: 5),
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.laptop_mac, size: 18),
+                                                  const SizedBox(width: 5),
+                                                  Text('${location['deviceCount']?.toString() ?? '0'} Devices',
+                                                      style: const TextStyle(fontSize: 14)),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (!_isEditing)
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => const AssetDevicesScreen(showSuccessPopup: false),
+                                                ),
+                                              );
+                                            },
+                                            child: const Row(
+                                              children: [
+                                                Text('Detail', style: TextStyle(color: Colors.blue)),
+                                                Icon(Icons.arrow_forward_ios, size: 16, color: Colors.blue),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+              ),
+              const SizedBox(height: 80),
             ],
           ),
 
-          // Floating add location button
+          // Floating action button based on editing mode
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 20.0),
-              child: ElevatedButton(
-                onPressed: _addLocation,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                child: const Text(
-                  'Add location',
-                  style: TextStyle(color: Colors.white, fontSize: 18),
-                ),
-              ),
+              child: _isEditing && _selectedLocationIds.isNotEmpty
+                  ? ElevatedButton(
+                      onPressed: _deleteLocations,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                      child: const Text(
+                        'Delete Selected',
+                        style: TextStyle(color: Color.fromARGB(255, 119, 119, 119), fontSize: 18),
+                      ),
+                    )
+                  : ElevatedButton(
+                      onPressed: _addLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                      ),
+                      child: const Text(
+                        'Add location',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
             ),
           ),
 
@@ -262,9 +397,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
               child: Container(
                 color: Colors.green,
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                child: SafeArea(
+                child: const SafeArea( // Changed to const
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.check_circle_outline, color: Colors.white),
                       SizedBox(width: 10),
                       Text(

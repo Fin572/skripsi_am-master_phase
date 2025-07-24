@@ -39,20 +39,42 @@ class AssetDetailViewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context); // Go back to the previous screen
-          },
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(95.0), // Consistent height for the app bar
+        child: Stack(
+          children: [
+            // Background image for the AppBar
+            Image.asset(
+              'assets/bg_image.png', // Ensure this path is correct
+              height: 95,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            // Content of the AppBar (back button and title)
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    const Text(
+                      'Devices', // Title "Devices" from the image
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        title: const Text(
-          'Devices', // Title from image
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -97,6 +119,7 @@ class AssetDetailViewScreen extends StatelessWidget {
                 children: [
                   // --- Asset Details Card ---
                   Card(
+                    color: Colors.white,
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     child: Padding(

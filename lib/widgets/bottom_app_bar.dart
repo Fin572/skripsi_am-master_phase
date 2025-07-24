@@ -13,8 +13,8 @@ class CustomBottomAppBar extends StatelessWidget {
   int _mapPageIndexToBottomIndex(int index) {
     if (index == 0) return 0;
     if (index == 1) return 1;
-    if (index == 2) return 3;
-    if (index == 3) return 4;
+    if (index == 2) return 3; // Index 2 in page is actually 3rd item in bottom nav (Invoice)
+    if (index == 3) return 4; // Index 3 in page is actually 4th item in bottom nav (Profile)
     return 0;
   }
 
