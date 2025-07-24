@@ -20,6 +20,9 @@ class _DevicesScreenState extends State<DevicesScreen> {
   bool _isEditing = false; // New state variable for edit mode
   Set<String> _selectedLocationIds = {}; // Stores IDs of selected locations for deletion
 
+  // Assume organizationId is fetched from user context or hardcoded for now
+  // In a real app, this should be passed from parent widget or fetched from auth/session
+  final String _organizationId = "1"; // Replace with dynamic value, e.g., user's organization ID (like for PT Dunia Persada)
 
   // This method will fetch locations from the database
   Future<void> _fetchLocations() async {
@@ -121,7 +124,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
   void _addLocation() async {
     final newLocation = await Navigator.push<Location>(
       context,
-      MaterialPageRoute(builder: (context) => const AddLocationScreen()),
+      MaterialPageRoute(builder: (context) => AddLocationScreen(organizationId: _organizationId)), // Pass the required organizationId
     );
 
     if (newLocation != null) {
@@ -224,7 +227,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                 child: CompanyInfoCard(
                   ticketNumber: '#000001',
                   companyName: 'PT Dunia Persada',
-                  deviceCount: '$_isLoading' == 'true' ? 'Loading...' : '$totalAssetsCount Device', // Dynamic asset count
+                  deviceCount: _isLoading ? 'Loading...' : '$totalAssetsCount Device', // Dynamic asset count, fixed string comparison
                 ),
               ),
               Expanded(

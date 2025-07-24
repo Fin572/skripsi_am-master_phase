@@ -6,7 +6,7 @@ import 'dart:convert'; // for json decoding
 import 'package:asset_management/screen/models/location.dart'; // Ensure this model exists and matches your data structure
 
 class AddLocationScreen extends StatefulWidget {
-  const AddLocationScreen({Key? key}) : super(key: key);
+  const AddLocationScreen({Key? key, required String organizationId}) : super(key: key);
 
   @override
   State<AddLocationScreen> createState() => _AddLocationScreenState();
@@ -32,39 +32,46 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
   }
 
   Future<void> _submitLocation() async {
-    if (_formKey.currentState!.validate()) {
-      // Hardcoded values for testing (from original file)
-      String organizationId = "2";
-      String locationPICId = _personInChargeController.text; // Using PIC from form now
-
-      final response = await http.post(
-        Uri.parse('http://assetin.my.id/skripsi/add_location.php'), // Your server URL
-        body: {
-          'organization_id': organizationId,
-          'location_name': _locationNameController.text,
-          'address': _addressController.text,
-          'detail': _detailController.text,
-          'locationPIC_id': locationPICId,
-          'phone_number': _phoneNumberController.text,
-          'latitude': _currentMapCenter.latitude.toString(), // Pass current map center
-          'longitude': _currentMapCenter.longitude.toString(), // Pass current map center
-        },
+  if (_formKey.currentState!.validate()) {
+    // Hardcode organization_id to 2 and validate it
+    String organizationId = "2";
+    if (organizationId != "2") {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid organization ID. Must be 2.')),
       );
+      return;
+    }
 
-      final data = json.decode(response.body);
+    String locationPICId = _personInChargeController.text;
 
-      if (data['status'] == 'success') {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location added successfully!')),
-        );
-        Navigator.pop(context); // Close the screen after success
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add location: ${data['message']}')),
-        );
-      }
+    final response = await http.post(
+      Uri.parse('http://assetin.my.id/skripsi/add_location.php'),
+      body: {
+        'organization_id': organizationId,
+        'location_name': _locationNameController.text,
+        'address': _addressController.text,
+        'detail': _detailController.text,
+        'locationPIC_id': locationPICId,
+        'phone_number': _phoneNumberController.text,
+        'latitude': _currentMapCenter.latitude.toString(),
+        'longitude': _currentMapCenter.longitude.toString(),
+      },
+    );
+
+    final data = json.decode(response.body);
+
+    if (data['status'] == 'success') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location added successfully!')),
+      );
+      Navigator.pop(context); // Close the screen after success
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add location: ${data['message']}')),
+      );
     }
   }
+}
 
   @override
   void dispose() {
