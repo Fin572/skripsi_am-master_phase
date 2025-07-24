@@ -48,7 +48,7 @@ class _SAIncidentScreenState extends State<SAIncidentScreen> {
     try {
       final response = await http
           .get(Uri.parse('http://assetin.my.id/skripsi/get_incidents.php'))
-          .timeout(const Duration(seconds: 10));
+          .timeout(const Duration(seconds: 45));
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
