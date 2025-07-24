@@ -180,7 +180,7 @@ class SuperAdminHomePage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text("PT. Assetin", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       Text(userEmail, style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
