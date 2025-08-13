@@ -128,7 +128,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     if (_formKey.currentState!.validate() && _canSubmit) {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://assetin.my.id/skripsi/add_device.php'),
+        Uri.parse('https://assetin.my.id/skripsi/add_device.php'),
       );
 
       request.fields['location_id'] = _selectedLocation!.id.toString();
