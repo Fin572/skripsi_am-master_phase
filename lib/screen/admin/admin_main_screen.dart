@@ -9,13 +9,13 @@ import 'package:flutter/material.dart';
 
 class AdminMainScreen extends StatefulWidget {
   final String userName;
-  final String userEmail; // Added userEmail
+  final String userEmail; 
   final UserRole userRole;
 
   const AdminMainScreen({
     super.key,
     required this.userName,
-    required this.userEmail, // Added userEmail
+    required this.userEmail, 
     required this.userRole,
   });
 
@@ -24,7 +24,7 @@ class AdminMainScreen extends StatefulWidget {
 }
 
 class _AdminMainScreenState extends State<AdminMainScreen> {
-  int _pageIndex = 0; // Changed from _selectedIndex to _pageIndex
+  int _pageIndex = 0; 
 
   List<Widget> get _adminPages => [
         AdminHomePage(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
@@ -49,7 +49,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
   }
 
   int _mapBottomIndexToPageIndex(int index) {
-    if (index == 2) return _pageIndex; // The "empty" slot for FAB
+    if (index == 2) return _pageIndex; 
     if (index == 0) return 0;
     if (index == 1) return 1;
     if (index == 3) return 2;

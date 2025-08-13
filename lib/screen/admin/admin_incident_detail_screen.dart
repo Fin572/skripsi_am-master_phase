@@ -2,8 +2,8 @@
 import 'package:asset_management/screen/admin/Admin_completed_Incident_Screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:http/http.dart' as http; // Reintroduced
-import 'dart:convert'; // Reintroduced
+import 'package:http/http.dart' as http; 
+import 'dart:convert'; 
 
 class AdminIncidentDetailScreen extends StatefulWidget {
   final Map<String, String> incident;
@@ -28,7 +28,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
   void initState() {
     super.initState();
     _currentIncident = Map<String, String>.from(widget.incident);
-    print('Current Incident in Detail: $_currentIncident'); // Reintroduced debug print
+    print('Current Incident in Detail: $_currentIncident'); 
   }
 
   Future<void> _showConfirmationDialog(String action) async {
@@ -48,9 +48,9 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
             ),
             TextButton(
               child: const Text('Yes'),
-              onPressed: () async { // Made async
+              onPressed: () async {
                 Navigator.of(context).pop();
-                await _updateIncidentStatus(action); // Await the call
+                await _updateIncidentStatus(action); 
               },
             ),
           ],
@@ -59,10 +59,10 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
     );
   }
 
-  Future<void> _updateIncidentStatus(String action) async { // Made async
+  Future<void> _updateIncidentStatus(String action) async { 
     String newStatus;
     if (action == 'Accept') {
-      newStatus = 'On progress'; // Match database enum exactly
+      newStatus = 'On progress'; 
     } else if (action == 'Reject') {
       newStatus = 'Rejected';
     } else {
@@ -71,11 +71,11 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
     setState(() {
       _currentIncident['status'] = newStatus;
-      print('Updating incident ${_currentIncident['incident_id']} to status: $newStatus'); // Reintroduced debug print
+      print('Updating incident ${_currentIncident['incident_id']} to status: $newStatus'); 
     });
 
     try {
-      final response = await http.post( // Reintroduced HTTP call
+      final response = await http.post( 
         Uri.parse('http://assetin.my.id/skripsi/update_incidents.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -86,24 +86,24 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
       final responseData = jsonDecode(response.body);
       if (responseData['success'] == true) {
-        print('API Success: ${responseData['message']}'); // Reintroduced debug print
+        print('API Success: ${responseData['message']}'); 
         widget.onIncidentUpdated(_currentIncident);
       } else {
-        print('API Error: ${responseData['error']}'); // Reintroduced debug print
+        print('API Error: ${responseData['error']}'); 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update: ${responseData['error']}')),
         );
         setState(() {
-          _currentIncident['status'] = widget.incident['status']!; // Revert on failure
+          _currentIncident['status'] = widget.incident['status']!; 
         });
       }
     } catch (e) {
-      print('Network Error: $e'); // Reintroduced debug print
+      print('Network Error: $e'); 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating incident: $e')),
       );
       setState(() {
-        _currentIncident['status'] = widget.incident['status']!; // Revert on failure
+        _currentIncident['status'] = widget.incident['status']!; 
       });
     }
   }
@@ -114,7 +114,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Consistent with NEW UI
+    const double consistentAppBarHeight = 100.0; 
 
     final String companyInfo = _currentIncident['companyInfo']!;
     final List<String> companyParts = companyInfo.split(' - ');
@@ -221,7 +221,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                       child: ElevatedButton(
                         onPressed: () => _showConfirmationDialog('Accept'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromRGBO(52, 152, 219, 1), // Consistent color
+                          backgroundColor: const Color.fromRGBO(52, 152, 219, 1), 
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -251,7 +251,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 255, 255, 255), // Consistent color
+                      backgroundColor: const Color.fromARGB(255, 255, 255, 255), 
                       padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10.0),
@@ -259,7 +259,7 @@ class _AdminIncidentDetailScreenState extends State<AdminIncidentDetailScreen> {
                     ),
                     child: const Text(
                       'Complete Incident',
-                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18), // Consistent color
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 18), 
                     ),
                   ),
                 ),

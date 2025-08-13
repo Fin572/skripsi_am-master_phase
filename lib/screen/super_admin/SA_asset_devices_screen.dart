@@ -4,11 +4,11 @@ import 'package:asset_management/screen/asset_category_detail_screen.dart';
 import 'package:asset_management/screen/super_admin/SA_asset_category_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:asset_management/screen/models/asset.dart'; // Import the Asset model
+import 'package:asset_management/screen/models/asset.dart'; 
 
 class SAAssetDevicesScreen extends StatefulWidget {
   final bool showSuccessPopup;
-  final Asset asset; // This needs to be correctly initialized or made optional.
+  final Asset asset; 
 
   const SAAssetDevicesScreen({Key? key, this.showSuccessPopup = false, required this.asset}) : super(key: key);
 
@@ -19,13 +19,12 @@ class SAAssetDevicesScreen extends StatefulWidget {
 class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
   bool _showSuccessPopup = false;
 
-  // This list will contain your asset categories, now mapped to a structure
-  // that can generate Asset objects for the next screen.
+
   final List<Map<String, dynamic>> _assetCategoryData = [
     {
       'categoryName': 'CCTV',
       'deviceCount': '4',
-      'assets': [ // Actual Asset objects for CCTV category
+      'assets': [ 
         Asset(
           id: '#001001',
           name: 'CCTV',
@@ -78,7 +77,7 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
     },
     {
       'categoryName': 'Electronics',
-      'deviceCount': '2', // Example, changed from 4 to differentiate
+      'deviceCount': '2', 
       'assets': [
         Asset(
           id: '#ELC001',
@@ -106,7 +105,6 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
         ),
       ]
     },
-    // Add more categories with their specific assets if needed
   ];
 
   @override
@@ -129,17 +127,15 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(243,245,247,247),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(95.0), // Height similar to your example
+        preferredSize: const Size.fromHeight(95.0),
         child: Stack(
           children: [
-            // Background image for the AppBar
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: 95,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
-            // Content of the AppBar (back button and title)
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -174,7 +170,7 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
                 child: const CompanyInfoCard(
                   ticketNumber: '#000001',
                   companyName: 'PT Dunia Persada',
-                  deviceCount: '6 Assets', // Updated to match dummy data sum
+                  deviceCount: '6 Assets', 
                 ),
               ),
               Expanded(
@@ -188,7 +184,7 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
                           return _buildAssetCategoryCard(
                             categoryName: category['categoryName']!,
                             deviceCount: category['deviceCount']!,
-                            assetsInCategory: category['assets'] as List<Asset>, // Pass the actual list of assets
+                            assetsInCategory: category['assets'] as List<Asset>, 
                           );
                         },
                       ),
@@ -203,7 +199,7 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
   Widget _buildAssetCategoryCard({
     required String categoryName,
     required String deviceCount,
-    required List<Asset> assetsInCategory, // Now accepts List<Asset>
+    required List<Asset> assetsInCategory,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -236,13 +232,12 @@ class _SAAssetDevicesScreenState extends State<SAAssetDevicesScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to AssetCategoryDetailScreen, passing the actual assets
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => SAAssetCategoryDetailScreen(
                       categoryName: categoryName,
-                      assetsInCategory: assetsInCategory, // Pass the actual list of Asset objects
+                      assetsInCategory: assetsInCategory, 
                     ),
                   ),
                 );

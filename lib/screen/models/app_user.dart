@@ -1,15 +1,14 @@
-// lib/models/app_user.dart
-import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole enum
-import 'package:asset_management/screen/models/organization.dart'; // Import Organization model
+import 'package:asset_management/screen/models/user_role.dart'; 
+import 'package:asset_management/screen/models/organization.dart'; 
 
 class AppUser {
   final String id;
   final String name;
   final String email;
-  final String password; // In real app, never store plaintext password
+  final String password; 
   final String phone;
-  final UserRole role; // user, admin, superAdmin
-  final Organization? organization; // Optional for users, null for admins/superadmins
+  final UserRole role; 
+  final Organization? organization; 
 
   AppUser({
     required this.id,

@@ -1,16 +1,14 @@
-// SA_home_page.dart
-
 import 'package:asset_management/screen/admin/admin_incident.dart';
 import 'package:asset_management/screen/devices_screen.dart';
 import 'package:asset_management/screen/super_admin/SA_add_org.dart';
 import 'package:asset_management/screen/super_admin/SA_incident.dart';
 import 'package:asset_management/screen/super_admin/SA_register.dart';
-import 'package:asset_management/screen/super_admin/SA_user_list_screen.dart'; // Added import
+import 'package:asset_management/screen/super_admin/SA_user_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:asset_management/screen/models/user_role.dart';
 
-import '../../widgets/comingsoon.dart'; // Ensure this path is correct if not directly used
+import '../../widgets/comingsoon.dart'; 
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -130,24 +128,24 @@ class SuperAdminHomePage extends StatelessWidget {
                 const SizedBox(height: 12),
                 _customCard(
                   title: 'Register',
-                  subtitle: '', // Passed empty subtitle
-                  icon: Icons.person_add_alt_1, // Used IconData directly
+                  subtitle: '', 
+                  icon: Icons.person_add_alt_1, 
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SuperAdminRegister(organizations: [],)), // Changed _organizations to organizations
+                      MaterialPageRoute(builder: (context) => const SuperAdminRegister(organizations: [],)), 
                     );
                   },
                 ),
                 const SizedBox(height: 24),
                 _customCard(
                   title: 'User List',
-                  subtitle: '', // Passed empty subtitle
-                  icon: Icons.person, // Used IconData directly
+                  subtitle: '', 
+                  icon: Icons.person, 
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SAUserListScreen()), // Directly navigate as per NEW UI
+                      MaterialPageRoute(builder: (context) => const SAUserListScreen()), 
                     );
                   },
                 ),
@@ -211,7 +209,6 @@ class SuperAdminHomePage extends StatelessWidget {
     IconData? icon,
     required VoidCallback onTap,
   }) {
-    // Add an assertion to ensure either iconPath or icon (but not both) is provided
     assert(iconPath != null || icon != null, 'Either iconPath or icon must be provided to _customCard.');
     assert(!(iconPath != null && icon != null), 'Cannot provide both iconPath and icon to _customCard. Choose one.');
 

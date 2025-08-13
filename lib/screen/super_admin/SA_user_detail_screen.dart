@@ -1,12 +1,11 @@
-// SA_user_detail_screen.dart
-import 'package:asset_management/screen/models/user_role.dart'; // Keep if UserRole enum is used elsewhere
+import 'package:asset_management/screen/models/user_role.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:asset_management/screen/models/user.dart'; // <--- Ensure this import exists
+import 'package:asset_management/screen/models/user.dart';
 
 class SAUserDetailScreen extends StatefulWidget {
-  final User user; // Accept a User object
+  final User user; 
 
   const SAUserDetailScreen({Key? key, required this.user}) : super(key: key);
 
@@ -15,14 +14,14 @@ class SAUserDetailScreen extends StatefulWidget {
 }
 
 class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
-  late User _currentUser; // _currentUser is now a User object
+  late User _currentUser; 
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _currentUser = widget.user; // Assign directly
-    _fetchUserDetail(); // Call API to get full user detail
+    _currentUser = widget.user; 
+    _fetchUserDetail(); 
   }
 
   Future<void> _fetchUserDetail() async {
@@ -40,15 +39,12 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
         final data = jsonDecode(response.body);
         if (data['success']) {
           setState(() {
-            // Reconstruct User object from fetched data or update properties.
-            // ONLY INCLUDE PROPERTIES THAT EXIST IN YOUR USER MODEL.
             _currentUser = User(
-              userId: data['user_data']['user_id'].toString(), // Adjust key if 'id' vs 'user_id'
+              userId: data['user_data']['user_id'].toString(), 
               name: data['user_data']['name'].toString(),
               email: data['user_data']['email'].toString(),
-              companyName: data['user_data']['company_name']?.toString() ?? '', // Ensure non-nullable if model requires
-              addedDate: data['user_data']['added_date']?.toString() ?? '', // Ensure non-nullable if model requires
-              // Removed phone and role from here
+              companyName: data['user_data']['company_name']?.toString() ?? '', 
+              addedDate: data['user_data']['added_date']?.toString() ?? '', 
             );
           });
         } else {
@@ -73,11 +69,6 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
   }
 
   Future<void> _updateUserRole(UserRole newRole) async {
-    // This method might become problematic if 'role' is completely removed
-    // and this function is still called.
-    // If you're not updating roles from this screen anymore, you might remove this method.
-    // For now, I'll keep it but note that 'role' access would cause an error if User model doesn't have it.
-    // Assuming UserRole enum is still used for other purposes.
     setState(() {
       _isLoading = true;
     });
@@ -87,7 +78,6 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'user_id': _currentUser.userId,
-          // 'user_role': newRole.name, // Removed as 'role' is not in User model
         }),
       );
 
@@ -97,7 +87,7 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('User role updated to ${newRole.name} successfully!')),
           );
-          _fetchUserDetail(); // Refresh data after update
+          _fetchUserDetail(); 
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to update role: ${data['message']}')),
@@ -161,7 +151,7 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('User ${_currentUser.name} deleted successfully!')),
             );
-            Navigator.of(context).pop(); // Go back to previous screen (user list)
+            Navigator.of(context).pop(); 
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Failed to delete user: ${data['message']}')),
@@ -221,7 +211,7 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Standard height for image app bars
+    const double consistentAppBarHeight = 100.0; 
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -294,7 +284,6 @@ class _SAUserDetailScreenState extends State<SAUserDetailScreen> {
                       child: Column(
                         children: [
                           _buildInfoRow('User ID', _currentUser.userId),
-                          // Removed _buildInfoRow for Phone and Role
                           if (_currentUser.companyName != null && _currentUser.companyName!.isNotEmpty)
                             _buildInfoRow('Organization', _currentUser.companyName!),
                         ],

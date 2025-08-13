@@ -3,7 +3,7 @@ import 'package:asset_management/screen/devices_screen.dart';
 import 'package:asset_management/screen/admin/admin_incident.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole
+import 'package:asset_management/screen/models/user_role.dart'; 
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -22,12 +22,10 @@ void showComingSoonPopup(BuildContext context) {
 }
 
 class AdminHomePage extends StatelessWidget {
-  // 1. Declare final fields to store the passed data
   final String userName;
   final String userEmail;
   final UserRole userRole;
 
-  // 2. Add a constructor to receive the data
   const AdminHomePage({
     super.key,
     required this.userName,
@@ -134,8 +132,7 @@ class AdminHomePage extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("PT. Dunia Persada", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      // Use the passed userEmail here if it represents the company email
+                      const Text("PT. Assetin", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       const Text("Admin@Admin.com", style: TextStyle(color: Colors.grey)),
                     ],
                   ),
@@ -146,7 +143,7 @@ class AdminHomePage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text(
-                    DateFormat("dd MMM yyyy").format(DateTime.now()), // Corrected format string for full year
+                    DateFormat("dd MMM yyyy").format(DateTime.now()), 
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),

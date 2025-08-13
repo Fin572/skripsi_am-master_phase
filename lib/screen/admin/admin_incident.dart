@@ -1,7 +1,7 @@
 // admin_incident.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Reintroduced
-import 'dart:convert'; // Reintroduced
+import 'package:http/http.dart' as http; 
+import 'dart:convert'; 
 import 'admin_incident_detail_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -16,17 +16,17 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
   int _selectedTabIndex = 0;
   final List<String> _statusCategories = [
     'Assigned',
-    'On Progress', // Changed from 'On progress' to 'On Progress' for consistency with models
+    'On Progress', 
     'Rejected',
     'Completed',
   ];
   List<Map<String, String>> _incidentData = [];
-  bool _isLoading = true; // Reintroduced
+  bool _isLoading = true; 
 
   @override
   void initState() {
     super.initState();
-    _fetchIncidents(); // Reintroduced
+    _fetchIncidents(); 
   }
 
   @override
@@ -34,7 +34,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchIncidents() async { // Reintroduced
+  Future<void> _fetchIncidents() async { 
     setState(() {
       _isLoading = true;
     });
@@ -68,7 +68,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
               'location': item['location_name']?.toString() ?? 'Location #${item['location_id']?.toString() ?? 'Unknown'}',
               'ticketId': '#${item['incident_id']?.toString() ?? ''}',
               'description': item['description']?.toString() ?? 'No description provided',
-              'before_photos': item['before_photos']?.toString() ?? '', // Changed imageUrls back to before_photos
+              'before_photos': item['before_photos']?.toString() ?? '', 
               'value': item['value']?.toString() ?? '',
               'pic_id': item['pic_id']?.toString() ?? '',
               'after_photos': item['after_photos']?.toString() ?? '',
@@ -112,7 +112,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
       }
     });
 
-    _fetchIncidents(); // Refresh data from database
+    _fetchIncidents();
   }
 
   @override
@@ -124,7 +124,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
     print('Current status: $currentStatus');
     print('Filtered incidents: $filteredIncidents');
 
-    const double consistentAppBarHeight = 100.0; // Consistent with NEW UI
+    const double consistentAppBarHeight = 100.0; 
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
@@ -162,7 +162,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator()) // Reintroduced loading indicator
+          ? const Center(child: CircularProgressIndicator()) 
           : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,9 +257,9 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
                       ],
                     ),
                   ),
-                ], // Penutup Column
-              ), // Penutup SingleChildScrollView
-            ), // Penutup Expanded
+                ],
+              ), 
+            ), 
           );
   }
 
@@ -276,7 +276,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.transparent, // Consistent color
+              color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.transparent, 
               width: 2.0,
             ),
           ),
@@ -284,7 +284,7 @@ class _AdminIncidentScreenState extends State<AdminIncidentScreen> {
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey[600], // Consistent color
+            color: isSelected ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey[600],
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

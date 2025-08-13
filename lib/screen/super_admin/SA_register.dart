@@ -1,49 +1,43 @@
-// SA_register.dart
 import 'package:asset_management/screen/models/organization.dart';
 import 'package:asset_management/screen/models/user_role.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Preserved
-import 'dart:convert'; // Preserved
-import 'package:asset_management/screen/models/app_user.dart'; // Added as used in NEW UI for _appUsers list
+import 'package:http/http.dart' as http; 
+import 'dart:convert'; 
+import 'package:asset_management/screen/models/app_user.dart'; 
 
 class SuperAdminRegister extends StatefulWidget {
-  final List<Organization> organizations; // Preserved required parameter
+  final List<Organization> organizations; 
 
   const SuperAdminRegister({Key? key, required this.organizations}) : super(key: key);
 
   @override
-  State<SuperAdminRegister> createState() => _SuperAdminRegisterState(); // Consistent state class name
+  State<SuperAdminRegister> createState() => _SuperAdminRegisterState(); 
 }
 
 class _SuperAdminRegisterState extends State<SuperAdminRegister> {
-  // Controllers dari SA_register.dart asli, disesuaikan dengan kebutuhan UI baru
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _phoneController = TextEditingController(); // Ini adalah _usernameController dari file asli, diubah menjadi _phoneController untuk UI baru
-  final _confirmPasswordController = TextEditingController(); // Dari NEW UI
+  final _phoneController = TextEditingController(); 
+  final _confirmPasswordController = TextEditingController(); 
 
   final _formKey = GlobalKey<FormState>();
-  UserRole? _selectedRole; // Menggunakan UserRole enum langsung
-  Organization? _selectedOrganization; // Menggunakan Organization model langsung
+  UserRole? _selectedRole; 
+  Organization? _selectedOrganization;
 
-  bool _obscurePassword = true; // Untuk toggle visibilitas password
-  bool _obscureConfirmPassword = true; // Untuk toggle visibilitas confirm password
-  bool _isLoading = false; // State untuk indikator loading (dari backend asli)
+  bool _obscurePassword = true; 
+  bool _obscureConfirmPassword = true; 
+  bool _isLoading = false; 
 
-  // List kosong untuk _appUsers, sesuai dengan SA_register NEW UI.dart
-  // Meskipun ini adalah layar register, NEW UI-nya memiliki list ini.
   final List<AppUser> _appUsers = [];
 
-  // Variabel untuk menyimpan organisasi yang fetched jika organizations di widget kosong
   List<Organization> _fetchedOrganizations = [];
 
 
   @override
   void initState() {
     super.initState();
-    // Menggunakan organizations yang dilewatkan melalui widget
-    // Jika widget.organizations kosong, baru fetch dari API
+
     if (widget.organizations.isEmpty) {
       _fetchOrganizations();
     } else {
@@ -61,7 +55,6 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
     super.dispose();
   }
 
-  // Backend: Fetch Organizations (dari SA_register.dart asli)
   Future<void> _fetchOrganizations() async {
     setState(() {
       _isLoading = true;
@@ -89,10 +82,8 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
   }
 
 
-  // Backend: Register User (dari SA_register.dart asli)
   Future<void> _registerUser() async {
     if (_formKey.currentState!.validate()) {
-      // Validasi konfirmasi password (dari NEW UI)
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Passwords do not match!'), backgroundColor: Colors.red),
@@ -101,22 +92,21 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
       }
 
       setState(() {
-        _isLoading = true; // Aktifkan loading
+        _isLoading = true; 
       });
 
       try {
         final response = await http.post(
-          Uri.parse('http://assetin.my.id/skripsi/register_user.php'), // Endpoint backend
+          Uri.parse('http://assetin.my.id/skripsi/register_user.php'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
-            // Data yang dikirim ke backend, sesuai dengan SA_register.dart asli
-            'username': _emailController.text, // Menggunakan email sebagai username untuk backend jika tidak ada field username terpisah di UI baru
+            'username': _emailController.text, 
             'name': _nameController.text,
             'email': _emailController.text,
             'password': _passwordController.text,
-            'role': _selectedRole?.name, // Menggunakan UserRole enum .name untuk string role
-            'organization_id': _selectedOrganization?.id, // Menggunakan Organization model .id
-            'phone_number': _phoneController.text, // Menambahkan phone number
+            'role': _selectedRole?.name, 
+            'organization_id': _selectedOrganization?.id,
+            'phone_number': _phoneController.text, 
           }),
         );
 
@@ -132,8 +122,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('User ${_nameController.text} registered successfully!')),
           );
-          // Bersihkan semua field formulir setelah sukses
-          _formKey.currentState!.reset(); // Reset form state
+          _formKey.currentState!.reset(); 
           _nameController.clear();
           _emailController.clear();
           _passwordController.clear();
@@ -142,18 +131,17 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
           setState(() {
             _selectedRole = null;
             _selectedOrganization = null;
-            _obscurePassword = true; // Reset password visibility
-            _obscureConfirmPassword = true; // Reset confirm password visibility
+            _obscurePassword = true; 
+            _obscureConfirmPassword = true; 
           });
 
-          // Tambahkan user baru ke _appUsers (sesuai NEW UI), jika memang untuk daftar lokal
           final newUser = AppUser(
             id: responseData['user_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
             name: _nameController.text,
             email: _emailController.text,
-            password: _passwordController.text, // Peringatan: Tidak disarankan menyimpan password
+            password: _passwordController.text, 
             phone: _phoneController.text,
-            role: _selectedRole ?? UserRole.unknown, // Pastikan role tidak null
+            role: _selectedRole ?? UserRole.unknown,
             organization: _selectedRole == UserRole.customer ? _selectedOrganization : null,
           );
           _appUsers.add(newUser);
@@ -170,14 +158,12 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
         );
       } finally {
         setState(() {
-          _isLoading = false; // Matikan loading
+          _isLoading = false; 
         });
       }
     }
   }
 
-
-  // Helper Widgets: Input Decorations (dari NEW UI)
   InputDecoration _buildInputDecoration(String labelText, String hintText) {
     return InputDecoration(
       labelText: labelText,
@@ -201,10 +187,9 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
     );
   }
 
-  // Helper Widget: TextField Generik (gabungan dari SA_register.dart asli & NEW UI)
   Widget _buildTextField(
       TextEditingController controller,
-      String labelText, // e.g. "Name*"
+      String labelText, 
       String hintText,
       TextInputType keyboardType, {
         bool obscureText = false,
@@ -217,7 +202,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Text(
-            labelText.replaceAll('*', ''), // Hapus asterisk dari teks label di widget Text
+            labelText.replaceAll('*', ''), 
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
         ),
@@ -235,7 +220,6 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                     ),
                     onPressed: () {
                       setState(() {
-                        // Toggle visibilitas berdasarkan controller yang dilewatkan
                         if (controller == _passwordController) {
                           _obscurePassword = !_obscurePassword;
                         } else if (controller == _confirmPasswordController) {
@@ -251,13 +235,12 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
     );
   }
 
-  // Helper Widget: Dropdown Field Generik (gabungan dari SA_register.dart asli & NEW UI)
   Widget _buildDropdownField<T>({
-    required String label, // e.g. "Choose Level*"
+    required String label, // 
     required T? value,
     required String hintText,
     required List<T> items,
-    String Function(T)? itemToString, // Opsional: untuk tampilan item kustom
+    String Function(T)? itemToString, 
     required ValueChanged<T?> onChanged,
     String? Function(T?)? validator,
   }) {
@@ -267,7 +250,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Text(
-            label.replaceAll('*', ''), // Hapus asterisk dari label
+            label.replaceAll('*', ''),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
         ),
@@ -296,15 +279,14 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
     final buttonHeight = screenSize.height * 0.07;
     final fieldSpacing = screenSize.height * 0.03;
 
-    const double consistentAppBarHeight = 100.0; // Dari NEW UI
+    const double consistentAppBarHeight = 100.0; 
 
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Warna latar belakang dari NEW UI
+      backgroundColor: Colors.grey[100], 
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Gambar latar belakang AppBar (dari NEW UI)
             Image.asset(
               'assets/bg_image.png',
               height: consistentAppBarHeight,
@@ -324,7 +306,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      'Register', // Judul dari NEW UI
+                      'Register', 
                       style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -334,54 +316,52 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
           ],
         ),
       ),
-      body: _isLoading // Indikator loading (dari backend asli)
+      body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
-          : SafeArea( // Menggunakan SafeArea untuk konten body
+          : SafeArea( 
               child: Padding(
                 padding: EdgeInsets.all(padding),
-                child: Column( // Menggunakan Column untuk memanfaatkan Expanded dan menangani tombol di bawah
+                child: Column( 
                   children: [
-                    Expanded( // Membuat SingleChildScrollView mengambil semua ruang yang tersedia
+                    Expanded( 
                       child: SingleChildScrollView(
                         child: Form(
-                          key: _formKey, // Menggunakan _formKey asli
+                          key: _formKey, 
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              SizedBox(height: fieldSpacing), // Spasi atas
-                              // Dropdown 1: Pilih Level (User/Customer atau Admin)
+                              SizedBox(height: fieldSpacing), 
                               _buildDropdownField<UserRole>(
-                                label: 'Choose Level*', // Label dari NEW UI
+                                label: 'Choose Level*', 
                                 value: _selectedRole,
-                                hintText: 'Customer/user', // Hint dari NEW UI
+                                hintText: 'Customer/user', 
                                 items: UserRole.values
-                                    .where((role) => role != UserRole.unknown && role != UserRole.superAdmin) // Kecualikan unknown dan superAdmin
+                                    .where((role) => role != UserRole.unknown && role != UserRole.superAdmin)
                                     .toList(),
-                                itemToString: (role) => role.name, // Tampilkan nama enum
+                                itemToString: (role) => role.name, 
                                 onChanged: (newValue) {
                                   setState(() {
                                     _selectedRole = newValue;
                                     if (newValue == UserRole.admin) {
-                                      _selectedOrganization = null; // Kosongkan organisasi jika Admin dipilih
+                                      _selectedOrganization = null; 
                                     }
                                   });
                                 },
                                 validator: (value) {
                                   if (value == null) {
-                                    return 'Please select account type'; // Pesan dari NEW UI
+                                    return 'Please select account type'; 
                                   }
                                   return null;
                                 },
                               ),
                               SizedBox(height: fieldSpacing),
-                              // Dropdown 2: Pilih Organisasi (tergantung peran yang dipilih)
-                              if (_selectedRole == UserRole.customer) // Hanya tampilkan jika peran 'User' dipilih
+                              if (_selectedRole == UserRole.customer)
                                 _buildDropdownField<Organization>(
-                                  label: 'Organization name*', // Label dari NEW UI
+                                  label: 'Organization name*',
                                   value: _selectedOrganization,
-                                  hintText: 'organization name', // Hint dari NEW UI
-                                  items: _fetchedOrganizations, // Menggunakan fetched organizations
+                                  hintText: 'organization name', 
+                                  items: _fetchedOrganizations, 
                                   itemToString: (org) => org.name,
                                   onChanged: (newValue) {
                                     setState(() {
@@ -390,22 +370,21 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                                   },
                                   validator: (value) {
                                     if (value == null && _selectedRole == UserRole.customer) {
-                                      return 'Please select an organization'; // Pesan dari NEW UI
+                                      return 'Please select an organization'; 
                                     }
                                     return null;
                                   },
                                 )
                               else
                                 const SizedBox.shrink(),
-                              // Spasi hanya jika dropdown organisasi ditampilkan
                               if (_selectedRole == UserRole.customer) SizedBox(height: fieldSpacing),
 
 
                               // Name
                               _buildTextField(
                                 _nameController,
-                                'Name*', // Label dari NEW UI
-                                'Name', // Hint dari NEW UI
+                                'Name*', 
+                                'Name', 
                                 TextInputType.text,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) return 'Name is required';
@@ -416,8 +395,8 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               // Email
                               _buildTextField(
                                 _emailController,
-                                'Email*', // Label dari NEW UI
-                                'name@example.com', // Hint dari NEW UI
+                                'Email*', 
+                                'name@example.com', 
                                 TextInputType.emailAddress,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) return 'Email is required';
@@ -426,11 +405,10 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                                 },
                               ),
                               SizedBox(height: fieldSpacing),
-                              // Password
                               _buildTextField(
                                 _passwordController,
-                                'Password*', // Label dari NEW UI
-                                'Minimum 6 characters', // Hint dari NEW UI
+                                'Password*', 
+                                'Minimum 6 characters', 
                                 TextInputType.visiblePassword,
                                 obscureText: _obscurePassword,
                                 showVisibilityToggle: true,
@@ -444,8 +422,8 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               // Confirm Password
                               _buildTextField(
                                 _confirmPasswordController,
-                                'Confirm password*', // Label dari NEW UI
-                                '', // Hint dari NEW UI
+                                'Confirm password*', 
+                                '', 
                                 TextInputType.visiblePassword,
                                 obscureText: _obscureConfirmPassword,
                                 showVisibilityToggle: true,
@@ -462,31 +440,30 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                         ),
                       ),
                     ),
-                    // Tombol Register ditempatkan langsung di Column utama
                     SizedBox(
                       width: double.infinity,
                       height: buttonHeight,
                       child: ElevatedButton(
-                        onPressed: _registerUser, // Menggunakan _registerUser asli untuk interaksi backend
+                        onPressed: _registerUser, 
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue, // Dari NEW UI
-                          padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.02), // Padding responsif
+                          backgroundColor: Colors.blue, 
+                          padding: EdgeInsets.symmetric(vertical: screenSize.height * 0.02), 
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10.0), // Dari NEW UI
+                            borderRadius: BorderRadius.circular(10.0), 
                           ),
                         ),
-                        child: _isLoading // Tampilkan indikator loading jika sedang sibuk
+                        child: _isLoading 
                             ? const CircularProgressIndicator(color: Colors.white)
                             : Text(
-                                'Register', // Teks dari NEW UI
+                                'Register', 
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: fontSize, // Ukuran font responsif
+                                  fontSize: fontSize, 
                                 ),
                               ),
                       ),
                     ),
-                    SizedBox(height: fieldSpacing), // Spasi di bawah tombol
+                    SizedBox(height: fieldSpacing), 
                   ],
                 ),
               ),

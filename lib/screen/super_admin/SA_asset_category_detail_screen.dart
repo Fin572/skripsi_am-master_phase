@@ -2,16 +2,16 @@
 
 import 'package:asset_management/screen/super_admin/SA_asset_detail_view_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:asset_management/screen/models/asset.dart'; // Import the Asset model
+import 'package:asset_management/screen/models/asset.dart'; 
 
 class SAAssetCategoryDetailScreen extends StatefulWidget {
   final String categoryName;
-  final List<Asset> assetsInCategory; // Changed to List<Asset> to pass full objects
+  final List<Asset> assetsInCategory; 
 
   const SAAssetCategoryDetailScreen({
     Key? key,
     required this.categoryName,
-    this.assetsInCategory = const [], // Default empty list
+    this.assetsInCategory = const [],
   }) : super(key: key);
 
   @override
@@ -20,23 +20,21 @@ class SAAssetCategoryDetailScreen extends StatefulWidget {
 
 class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScreen> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isEditing = false; // New state variable for edit mode
-  Set<String> _selectedAssetIds = {}; // Stores IDs of selected assets
+  bool _isEditing = false; 
+  Set<String> _selectedAssetIds = {}; 
 
-  // Mock list of assets for the category to populate the ListView.
-  // This will now be mutable.
+  
   List<Asset> _mockAssetsForCategory = [];
 
   @override
   void initState() {
     super.initState();
-    // Populate mock assets based on category for testing
     if (widget.assetsInCategory.isEmpty) {
       if (widget.categoryName == 'CCTV') {
         _mockAssetsForCategory = [
           Asset(
             id: '#001001',
-            name: 'CCTV', // As per image
+            name: 'CCTV', 
             category: 'Electronics',
             locationId: 'LOC001',
             locationInfo: 'Jl Pertiwi 12',
@@ -52,7 +50,7 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
             category: 'Electronics',
             locationId: 'LOC001',
             locationInfo: 'Jl Pertiwi 12',
-            latitude: -6.373706652012434, // Same coord for simplicity
+            latitude: -6.373706652012434, 
             longitude: 106.807699530,
             personInCharge: 'Danny',
             phoneNumber: '081208120812',
@@ -84,7 +82,6 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
           ),
         ];
       } else {
-        // Generic mock assets for other categories
         _mockAssetsForCategory = [
           Asset(
             id: '#GEN001',
@@ -111,7 +108,7 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
         ];
       }
     } else {
-      _mockAssetsForCategory = List.from(widget.assetsInCategory); // Use passed assets and make it mutable
+      _mockAssetsForCategory = List.from(widget.assetsInCategory); 
     }
   }
 
@@ -125,7 +122,7 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
     setState(() {
       _isEditing = !_isEditing;
       if (!_isEditing) {
-        _selectedAssetIds.clear(); // Clear selection when exiting edit mode
+        _selectedAssetIds.clear(); 
       }
     });
   }
@@ -157,13 +154,13 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // No
+                Navigator.of(context).pop(false); 
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // Yes
+                Navigator.of(context).pop(true); 
               },
               child: const Text('Yes'),
             ),
@@ -176,7 +173,7 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
       setState(() {
         _mockAssetsForCategory.removeWhere((asset) => _selectedAssetIds.contains(asset.id));
         _selectedAssetIds.clear();
-        if (_mockAssetsForCategory.isEmpty) { // Exit edit mode if all items are deleted
+        if (_mockAssetsForCategory.isEmpty) { 
           _isEditing = false;
         }
       });
@@ -190,7 +187,6 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
   Widget build(BuildContext context) {
     List<Asset> displayedAssets = _mockAssetsForCategory;
 
-    // Apply search filtering (case-insensitive)
     if (_searchController.text.isNotEmpty) {
       displayedAssets = displayedAssets
           .where((asset) => asset.name
@@ -200,19 +196,17 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Light grey background
+      backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(95.0), // Consistent height
+        preferredSize: const Size.fromHeight(95.0), 
         child: Stack(
           children: [
-            // Background image for the AppBar
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: 95,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
-            // Content of the AppBar (back button and title)
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -224,14 +218,14 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      widget.categoryName, // Display the actual category name
+                      widget.categoryName, 
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(), // Pushes actions to the right
+                    const Spacer(), 
                     if (_isEditing && _selectedAssetIds.isNotEmpty)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.white),
@@ -275,7 +269,6 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
                 ),
                 onChanged: (value) {
                   setState(() {
-                    // Trigger rebuild to apply search filter
                   });
                 },
               ),
@@ -283,7 +276,7 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
           ),
           Expanded(
             child: displayedAssets.isEmpty
-                ? _buildEmptyState() // Show empty state if no assets after filtering
+                ? _buildEmptyState() 
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     itemCount: displayedAssets.length,
@@ -301,12 +294,11 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
                           if (_isEditing) {
                             _toggleSelectAsset(asset.id);
                           } else {
-                            // Navigate to individual asset detail screen, passing the full asset object
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => SAAssetDetailViewScreen(
-                                  asset: asset, // Pass the specific asset being viewed
+                                  asset: asset,
                                 ),
                               ),
                             );
@@ -333,23 +325,20 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
                                       _toggleSelectAsset(asset.id);
                                     },
                                   ),
-                                // You might want an icon specific to the asset type here
-                                // For now, using a general placeholder or leaving it out if image doesn't show one
-                                // const Icon(Icons.videocam, size: 40, color: Colors.grey), // Example for CCTV
-                                // const SizedBox(width: 15),
+                          
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        asset.name, // Display asset's name
+                                        asset.name,
                                         style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),
                                       ),
                                       const Text(
-                                        'Qty : 1', // Assuming 1 quantity per individual asset listed here
+                                        'Qty : 1', 
                                         style: TextStyle(fontSize: 14, color: Colors.grey),
                                       ),
                                     ],
@@ -358,12 +347,11 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
                                 if (!_isEditing)
                                   TextButton(
                                     onPressed: () {
-                                      // Navigate to individual asset detail screen, passing the full asset object
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => SAAssetDetailViewScreen(
-                                            asset: asset, // Pass the specific asset being viewed
+                                            asset: asset, 
                                           ),
                                         ),
                                       );
@@ -388,14 +376,13 @@ class _SAAssetCategoryDetailScreenState extends State<SAAssetCategoryDetailScree
     );
   }
 
-  // Helper for empty state if no assets found or after filtering
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'assets/nodata.png', // Ensure this asset is in your pubspec.yaml
+            'assets/nodata.png', 
             width: 100,
           ),
           const SizedBox(height: 20),

@@ -1,12 +1,12 @@
 // admin_profile.dart
 import 'package:asset_management/screen/auth_screen.dart';
-import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole
+import 'package:asset_management/screen/models/user_role.dart'; 
 import 'package:flutter/material.dart';
 
 // Dummy AuthService for illustration
 class AuthService {
   static Future<void> logout() async {
-    await Future.delayed(Duration(seconds: 1)); // simulate logout delay
+    await Future.delayed(Duration(seconds: 1)); 
   }
 }
 
@@ -34,7 +34,7 @@ void showComingSoonPopup(BuildContext context) {
       content: const Text("Fitur ini sedang dalam pengembangan."),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(ctx).pop(), // close dialog
+          onPressed: () => Navigator.of(ctx).pop(),
           child: const Text("Tutup"),
         ),
       ],
@@ -47,14 +47,13 @@ class _ProfilePageState extends State<AdminProfile> {
 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Standard height for image app bars
+    const double consistentAppBarHeight = 100.0; 
 
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area
             Image.asset(
               'assets/bg_image.png',
               height: consistentAppBarHeight,
@@ -91,13 +90,12 @@ class _ProfilePageState extends State<AdminProfile> {
                     backgroundImage: AssetImage("assets/profile.png"),
                   ),
                   const SizedBox(height: 10),
-                  // 3. Use the passed data here
                   Text(
-                    widget.userName, // Access the data from the widget property
+                    widget.userName, 
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    widget.userEmail, // Access the data from the widget property
+                    widget.userEmail, 
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -106,17 +104,17 @@ class _ProfilePageState extends State<AdminProfile> {
           ),
           ListTile(
             leading: const Icon(Icons.business),
-            title: const Text("PT Dunia Persada"), // Consider making this dynamic based on userRole or other data
+            title: const Text("PT Assetin"), 
             onTap: () => showComingSoonPopup(context),
           ),
           ListTile(
             leading: const Icon(Icons.account_box),
-            title: const Text("#00001"), // Consider making this dynamic (e.g., user ID)
+            title: const Text("#00001"), 
             onTap: () => showComingSoonPopup(context),
           ),
           ListTile(
             leading: const Icon(Icons.assignment_ind_rounded),
-            title: Text(widget.userRole.name), // Display the user's role
+            title: Text(widget.userRole.name), 
             onTap: () => showComingSoonPopup(context),
           ),
           const Spacer(),

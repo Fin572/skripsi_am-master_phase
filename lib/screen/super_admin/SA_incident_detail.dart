@@ -249,11 +249,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                       onPressed: () {
                         String newStatusSa;
                         if (isCurrentIncidentCompleted) {
-                          newStatusSa = 'On Progress'; // Align with backend's allowed transition
+                          newStatusSa = 'On Progress';
                         } else if (isCurrentIncidentRejected) {
-                          newStatusSa = 'Assigned'; // Align with backend's allowed transition
+                          newStatusSa = 'Assigned'; 
                         } else {
-                          newStatusSa = 'On Progress'; // Fallback
+                          newStatusSa = 'On Progress'; 
                         }
                         _approveIncident(newStatusSa, 'Rejected by SA');
                       },
@@ -276,11 +276,11 @@ class _SAIncidentDetailScreenState extends State<SAIncidentDetailScreen> {
                       onPressed: () {
                         String newStatusSa;
                         if (isCurrentIncidentCompleted) {
-                          newStatusSa = 'Approved by Admin'; // Align with backend's allowed transition
+                          newStatusSa = 'Approved by Admin'; 
                         } else if (isCurrentIncidentRejected) {
-                          newStatusSa = 'Rejected by Admin'; // Align with backend's allowed transition
+                          newStatusSa = 'Rejected by Admin'; 
                         } else {
-                          newStatusSa = 'On Progress'; // Fallback
+                          newStatusSa = 'On Progress'; 
                         }
                         _approveIncident(newStatusSa, 'Approved by SA');
                       },

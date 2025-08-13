@@ -3,8 +3,8 @@ import 'package:asset_management/screen/super_admin/SA_asset_devices_screen.dart
 import 'package:asset_management/screen/super_admin/SA_devices_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/widgets/add_organization_dialog.dart';
-import 'package:http/http.dart' as http; // Kept
-import 'dart:convert'; // Kept
+import 'package:http/http.dart' as http; 
+import 'dart:convert'; 
 
 class SuperAdminAddOrganization extends StatefulWidget {
   const SuperAdminAddOrganization({Key? key}) : super(key: key);
@@ -16,14 +16,14 @@ class SuperAdminAddOrganization extends StatefulWidget {
 class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
   final TextEditingController _searchController = TextEditingController();
   final List<Organization> _organizations = [];
-  bool _isEditing = false; // New state variable for edit mode
-  Set<String> _selectedOrganizations = {}; // Stores IDs of selected organizations
-  bool _isLoading = false; // Kept
+  bool _isEditing = false; 
+  Set<String> _selectedOrganizations = {};
+  bool _isLoading = false; 
 
   @override
   void initState() {
     super.initState();
-    _fetchOrganizations(); // Kept
+    _fetchOrganizations();
   }
 
   @override
@@ -32,7 +32,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
     super.dispose();
   }
 
-  Future<void> _fetchOrganizations() async { // Kept
+  Future<void> _fetchOrganizations() async { 
     setState(() {
       _isLoading = true;
     });
@@ -74,27 +74,23 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
     );
 
     if (orgName != null && orgName.isNotEmpty) {
-      // The "NEW UI" locally adds, but as per instruction, we call fetch to refresh from backend.
-      // Assuming AddOrganizationDialog internally calls the backend or you have a separate API call here.
-      // If the dialog doesn't add to DB, you might need an HTTP POST here.
-      // For now, adhering to the instruction, we just refetch.
-      await _fetchOrganizations(); // Kept, assuming it refreshes the list after backend add.
+    
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Organization "$orgName" added successfully!')),
       );
     }
   }
 
-  void _toggleEditMode() { // New method
+  void _toggleEditMode() { 
     setState(() {
       _isEditing = !_isEditing;
       if (!_isEditing) {
-        _selectedOrganizations.clear(); // Clear selection when exiting edit mode
+        _selectedOrganizations.clear(); 
       }
     });
   }
 
-  void _toggleSelectOrganization(String orgId) { // New method
+  void _toggleSelectOrganization(String orgId) { 
     setState(() {
       if (_selectedOrganizations.contains(orgId)) {
         _selectedOrganizations.remove(orgId);
@@ -104,7 +100,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
     });
   }
 
-  Future<void> _deleteOrganizations() async { // Kept
+  Future<void> _deleteOrganizations() async { 
     setState(() {
       _isLoading = true;
     });
@@ -117,10 +113,10 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
       );
 
       if (response.statusCode == 200) {
-        await _fetchOrganizations(); // Refresh the list after deletion
+        await _fetchOrganizations(); 
         setState(() {
           _selectedOrganizations.clear();
-          _isEditing = false; // Exit edit mode after deletion
+          _isEditing = false; 
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Selected organization(s) deleted.')),
@@ -141,7 +137,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
     }
   }
 
-  void _confirmAndDeleteOrganizations() async { // Existing method, modified slightly
+  void _confirmAndDeleteOrganizations() async { 
     if (_selectedOrganizations.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No organizations selected for deletion.')),
@@ -174,7 +170,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
     );
 
     if (confirm == true) {
-      await _deleteOrganizations(); // Calls the backend deletion function
+      await _deleteOrganizations(); 
     }
   }
 
@@ -198,14 +194,14 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Organizations', // Changed title to 'Organizations'
+          'Organizations', 
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true, // Ensured centerTitle is true
+        centerTitle: true, 
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
@@ -216,8 +212,8 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
         ),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.done_all : Icons.edit, color: Colors.white), // Added action button
-            onPressed: _toggleEditMode, // Linked to new method
+            icon: Icon(_isEditing ? Icons.done_all : Icons.edit, color: Colors.white), 
+            onPressed: _toggleEditMode, 
           ),
         ],
       ),
@@ -253,7 +249,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
             ),
           ),
           Expanded(
-            child: _isLoading // Kept isLoading check
+            child: _isLoading 
                 ? const Center(child: CircularProgressIndicator())
                 : filteredOrganizations.isEmpty
                     ? Center(
@@ -264,8 +260,8 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                               'assets/nodata.png',
                               width: 100,
                             ),
-                            const SizedBox(height: 20), // Kept the SizedBox for spacing
-                            const Text( // Kept the "No organizations found" text for clarity with loading state
+                            const SizedBox(height: 20), 
+                            const Text( 
                               'No organizations found.',
                               style: TextStyle(fontSize: 16, color: Colors.grey),
                             ),
@@ -277,15 +273,15 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                         itemCount: filteredOrganizations.length,
                         itemBuilder: (context, index) {
                           final org = filteredOrganizations[index];
-                          final isSelected = _selectedOrganizations.contains(org.id); // Check if selected
+                          final isSelected = _selectedOrganizations.contains(org.id); 
                           return GestureDetector(
-                            onLongPress: () { // New long press for edit mode
+                            onLongPress: () { 
                               if (!_isEditing) {
                                 _toggleEditMode();
                               }
                               _toggleSelectOrganization(org.id);
                             },
-                            onTap: () { // New tap behavior
+                            onTap: () {
                               if (_isEditing) {
                                 _toggleSelectOrganization(org.id);
                               } else {
@@ -302,7 +298,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                               elevation: 2,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                side: _isEditing && isSelected // Conditional border
+                                side: _isEditing && isSelected
                                     ? const BorderSide(color: Colors.blue, width: 2.0)
                                     : BorderSide.none,
                               ),
@@ -314,7 +310,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                                     Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        if (_isEditing) // Show checkbox in edit mode
+                                        if (_isEditing) 
                                           Checkbox(
                                             value: isSelected,
                                             onChanged: (bool? value) {
@@ -332,7 +328,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '#${org.id}', // Formatted ID display
+                                                '#${org.id}', 
                                                 style: const TextStyle(
                                                     fontSize: 12,
                                                     fontWeight: FontWeight.bold,
@@ -357,12 +353,12 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                                             Icon(Icons.laptop_mac, size: 20, color: Colors.black54),
                                             SizedBox(width: 5),
                                             Text(
-                                              '0 Device', // Text consistent with NEW UI
+                                              '0 Device', 
                                               style: TextStyle(fontSize: 14, color: Colors.black87),
                                             ),
                                           ],
                                         ),
-                                        if (!_isEditing) // Detail button only when not editing
+                                        if (!_isEditing) 
                                           TextButton(
                                             onPressed: () {
                                               Navigator.push(
@@ -393,7 +389,7 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
             padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0),
             child: SizedBox(
               width: double.infinity,
-              child: _isEditing // Conditional button based on edit mode
+              child: _isEditing 
                   ? ElevatedButton(
                       onPressed: _confirmAndDeleteOrganizations,
                       style: ElevatedButton.styleFrom(
@@ -404,8 +400,8 @@ class _SuperAdminAddOrganizationState extends State<SuperAdminAddOrganization> {
                         ),
                       ),
                       child: const Text(
-                        'Delete', // Text for delete button
-                        style: TextStyle(color: Color.fromARGB(255, 201, 99, 99), fontSize: 16), // Text color for delete
+                        'Delete', 
+                        style: TextStyle(color: Color.fromARGB(255, 201, 99, 99), fontSize: 16), 
                       ),
                     )
                   : ElevatedButton(

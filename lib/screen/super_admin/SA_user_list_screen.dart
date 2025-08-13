@@ -1,7 +1,7 @@
 // lib/screens/super_admin/SA_user_list_screen.dart
 import 'package:asset_management/screen/super_admin/SA_user_detail_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:asset_management/screen/models/user.dart'; // Import the User model
+import 'package:asset_management/screen/models/user.dart'; 
 
 class SAUserListScreen extends StatefulWidget {
   const SAUserListScreen({Key? key}) : super(key: key);
@@ -11,67 +11,57 @@ class SAUserListScreen extends StatefulWidget {
 }
 
 class _SAUserListScreenState extends State<SAUserListScreen> {
-  // 0 for Customer, 1 for Admin
   int _selectedUserTypeIndex = 0;
 
-  // Dummy data for Customer Users
   final List<Map<String, String>> _customerUsers = [
     {
       'name': 'Syaiful',
       'email': 'user1@user.com',
       'addedDate': '25 Jan 2025',
-      'companyName': 'PT Dunia Persada', // Added
-      'userId': '#000001', // Added
-      // Removed 'phone' and 'role' from dummy data if they are not needed anywhere
-      // If you need them for other parts of the app, keep them here,
-      // but ensure they are not passed to User constructor.
+      'companyName': 'PT Dunia Persada',
+      'userId': '#000001',
     },
     {
       'name': 'Dina',
       'email': 'user2@user.com',
       'addedDate': '26 Feb 2025',
-      'companyName': 'PT Sejahtera Abadi', // Added
-      'userId': '#000002', // Added
+      'companyName': 'PT Sejahtera Abadi', 
+      'userId': '#000002', 
     },
   ];
 
-  // Dummy data for Admin Users (Modified to include companyName and userId)
   final List<Map<String, String>> _adminUsers = [
     {
       'name': 'Margareth',
       'email': 'admin1@admin.com',
       'addedDate': '25 Jan 2025',
-      'companyName': 'PT Global Tech', // Added
-      'userId': '#ADMIN01', // Added
+      'companyName': 'PT Global Tech', 
+      'userId': '#ADMIN01', 
     },
     {
       'name': 'Irham',
       'email': 'admin2@admin.com',
       'addedDate': '26 Feb 2025',
-      'companyName': 'PT Maju Bersama', // Added
-      'userId': '#ADMIN02', // Added
+      'companyName': 'PT Maju Bersama', 
+      'userId': '#ADMIN02', 
     },
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Determine which list to display based on the selected tab
     final List<Map<String, String>> displayedUsers =
         _selectedUserTypeIndex == 0 ? _customerUsers : _adminUsers;
 
-    // Define the consistent AppBar height
     const double consistentAppBarHeight = 100.0;
 
     return Scaffold(
-      backgroundColor: Colors.grey[100], // Light grey background
+      backgroundColor: Colors.grey[100], 
       appBar: PreferredSize(
-        // Set the preferredSize to the consistent height of 95.0
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area (95.0px)
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: consistentAppBarHeight,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -84,7 +74,7 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        Navigator.pop(context); // Navigate back
+                        Navigator.pop(context); 
                       },
                     ),
                     const SizedBox(width: 16),
@@ -101,13 +91,11 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
       ),
       body: SingleChildScrollView(
         child: Column(
-          // Use Column to stack tabs, search bar, and content
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // User type tabs (Customer / Admin) - Now part of the scrollable body
             Container(
               height: 48,
-              color: Colors.white, // White background for the tabs row
+              color: Colors.white, 
               child: Row(
                 children: [
                   Expanded(
@@ -167,7 +155,6 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                 ],
               ),
             ),
-            // Search bar - Now part of the scrollable body
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextField(
@@ -175,31 +162,28 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                   hintText: 'Search',
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   filled: true,
-                  fillColor: Colors.grey.shade100, // Light grey background for search bar
+                  fillColor: Colors.grey.shade100, 
                   enabledBorder: OutlineInputBorder(
-                    // Border when not focused
                     borderRadius: BorderRadius.circular(12.0),
-                    borderSide: BorderSide(color: Colors.grey.shade400, width: 1.0), // Grey outline
+                    borderSide: BorderSide(color: Colors.grey.shade400, width: 1.0),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    // Border when focused
                     borderRadius: BorderRadius.circular(12.0),
-                    borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // Blue outline when focused
+                    borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), 
                   ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0), // Adjust padding
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0), 
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0), // Main body padding
+              padding: const EdgeInsets.all(16.0), 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // User's list summary card
                   Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    color: Colors.white, // Set card background to white
+                    color: Colors.white, 
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -231,8 +215,8 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                   displayedUsers.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
-                          shrinkWrap: true, // Important for ListView inside SingleChildScrollView
-                          physics: const NeverScrollableScrollPhysics(), // Disable ListView's own scrolling
+                          shrinkWrap: true, 
+                          physics: const NeverScrollableScrollPhysics(), 
                           itemCount: displayedUsers.length,
                           itemBuilder: (context, index) {
                             final user = displayedUsers[index];
@@ -248,7 +232,6 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
     );
   }
 
-  // Helper method to build count items in the summary card
   Widget _buildCountItem(String label, String count) {
     return Column(
       children: [
@@ -264,18 +247,16 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
     );
   }
 
-  // Helper method to build a user list item card
   Widget _buildUserListItem(Map<String, String> userMap) {
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      color: Colors.white, // Set card background to white
+      color: Colors.white, 
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            // User icon (placeholder for now)
             CircleAvatar(
               radius: 20,
               backgroundColor: Colors.grey[300],
@@ -304,17 +285,14 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Create a User object from the map data BEFORE navigating
-                final userObject = User( // Changed variable name to avoid confusion
+                final userObject = User( 
                   name: userMap['name']!,
                   email: userMap['email']!,
                   companyName: userMap['companyName']!,
                   userId: userMap['userId']!,
                   addedDate: userMap['addedDate']!,
-                  // Removed phone and role from here
                 );
 
-                // Navigate to UserDetailScreen, passing the userObject
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -323,12 +301,12 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
                 );
               },
               style: TextButton.styleFrom(
-                padding: EdgeInsets.zero, // Remove default padding
-                minimumSize: Size.zero, // Remove minimum size constraints
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Shrink tap target
+                padding: EdgeInsets.zero, 
+                minimumSize: Size.zero, 
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: const Row(
-                mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Detail',
@@ -344,19 +322,18 @@ class _SAUserListScreenState extends State<SAUserListScreen> {
     );
   }
 
-  // Helper method for empty state
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image.asset(
-            'assets/nodata.png', // Make sure you have this asset
+            'assets/nodata.png',
             width: 100,
           ),
-          const SizedBox(height: 20), // Added SizedBox for spacing
+          const SizedBox(height: 20), 
           const Text(
-            'No users found for this type.', // Added text for clarity
+            'No users found for this type.', 
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ],

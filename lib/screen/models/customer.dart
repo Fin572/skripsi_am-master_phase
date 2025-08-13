@@ -9,7 +9,6 @@ class Customer {
     required this.totalAssets,
   });
 
-  // Contoh factory constructor untuk dari JSON (backend)
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
       id: json['id'].toString(),

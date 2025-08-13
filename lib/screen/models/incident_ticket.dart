@@ -1,7 +1,7 @@
 // lib/models/incident_ticket.dart
-import 'package:asset_management/screen/models/location.dart'; // Adjust path
-import 'package:asset_management/screen/models/asset.dart';     // Adjust path
-import 'dart:io'; // For File
+import 'package:asset_management/screen/models/location.dart'; 
+import 'package:asset_management/screen/models/asset.dart';    
+import 'dart:io'; 
 
 class IncidentTicket {
   final String ticketId;
@@ -9,8 +9,8 @@ class IncidentTicket {
   final Location location;
   final String description;
   final DateTime submissionTime;
-  final List<String> imageUrls; // Storing paths as Strings
-  final String status; // e.g., 'Assigned', 'On progress', 'Rejected', 'Done'
+  final List<String> imageUrls; 
+  final String status; 
 
   IncidentTicket({
     required this.ticketId,

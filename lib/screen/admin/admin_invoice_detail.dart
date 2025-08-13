@@ -22,17 +22,15 @@ class _AdminInvoicedetailState extends State<AdminInvoiceDetail> {
   Widget build(BuildContext context) {
     bool isPaid = widget.status == 'Paid';
     // Define the consistent AppBar height
-    const double consistentAppBarHeight = 100.0; // Changed from 95.0 to 100.0
-
+    const double consistentAppBarHeight = 100.0; 
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: consistentAppBarHeight,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -80,7 +78,7 @@ class _AdminInvoicedetailState extends State<AdminInvoiceDetail> {
                     Row(
                       children: [
                         Text(
-                          widget.status, // Display the status from the widget
+                          widget.status, 
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold),
                         ),
@@ -130,7 +128,6 @@ class _AdminInvoicedetailState extends State<AdminInvoiceDetail> {
                   ],
                 ),
               ),
-              // The payment method section is now only shown if isPaid is true
               if (isPaid) ...[
                 const SizedBox(height: 24),
                 const Text(

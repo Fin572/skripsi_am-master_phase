@@ -2,7 +2,7 @@ import 'package:asset_management/screen/super_admin/SA_asset_category_detail_scr
 import 'package:asset_management/screen/super_admin/SA_asset_devices_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:asset_management/screen/models/asset.dart'; // Import the Asset model
+import 'package:asset_management/screen/models/asset.dart'; 
 
 class SuperAdminDevicesScreen extends StatefulWidget {
   const SuperAdminDevicesScreen({Key? key}) : super(key: key);
@@ -18,18 +18,17 @@ class _SADevicesScreenState extends State<SuperAdminDevicesScreen> {
     final String companyName = 'PT Dunia Persada';
     final String assetCount = '0 Asset';
 
-    // Create a dummy Asset object with required fields
     final dummyAsset = Asset(
       id: '#001001',
       name: 'Server Rack A',
       category: 'IT Equipment',
       locationId: '#110000',
       locationInfo: 'Main Office - Server Room',
-      latitude: -6.2088, // Example latitude for Jakarta
-      longitude: 106.8456, // Example longitude for Jakarta
+      latitude: -6.2088, 
+      longitude: 106.8456, 
       personInCharge: 'Budi Santoso',
       phoneNumber: '081234567890',
-      barcodeData: 'SRACKA001', // Optional, but provided for completeness
+      barcodeData: 'SRACKA001', 
     );
 
     return Scaffold(
@@ -127,7 +126,6 @@ class _SADevicesScreenState extends State<SuperAdminDevicesScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        // This is the correct target for viewing asset details.
                                         builder: (context) => SAAssetDevicesScreen(asset: dummyAsset),
                                       ),
                                     );

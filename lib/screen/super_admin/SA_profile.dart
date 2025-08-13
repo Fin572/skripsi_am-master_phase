@@ -3,10 +3,9 @@ import 'package:asset_management/screen/auth_screen.dart';
 import 'package:asset_management/screen/models/user_role.dart';
 import 'package:flutter/material.dart';
 
-// Dummy AuthService for illustration
 class AuthService {
   static Future<void> logout() async {
-    await Future.delayed(const Duration(seconds: 1)); // simulate logout delay
+    await Future.delayed(const Duration(seconds: 1)); 
   }
 }
 
@@ -34,7 +33,7 @@ void showComingSoonPopup(BuildContext context) {
       content: const Text("Fitur ini sedang dalam pengembangan."),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(ctx).pop(), // close dialog
+          onPressed: () => Navigator.of(ctx).pop(),
           child: const Text("Tutup"),
         ),
       ],
@@ -43,18 +42,16 @@ void showComingSoonPopup(BuildContext context) {
 }
 
 class _ProfilePageState extends State<SuperAdminProfile> {
-  bool isAvailable = true; // This variable is not used in the current UI, can be removed if not for future use.
-
+  bool isAvailable = true; 
   @override
   Widget build(BuildContext context) {
-    const double consistentAppBarHeight = 100.0; // Standard height for image app bars
+    const double consistentAppBarHeight = 100.0; 
 
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area
             Image.asset(
               'assets/bg_image.png',
               height: consistentAppBarHeight,
@@ -150,16 +147,16 @@ void _handleLogout(BuildContext context) {
       content: const Text("Are you sure you want to log out?"),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(ctx).pop(), // close dialog
+          onPressed: () => Navigator.of(ctx).pop(), 
           child: const Text("Cancel"),
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(ctx).pop(); // close dialog
+            Navigator.of(ctx).pop(); 
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(builder: (context) => AuthScreen()),
-              (route) => false, // remove all previous routes
+              (route) => false, 
             );
           },
           child: const Text("Logout", style: TextStyle(color: Colors.red)),

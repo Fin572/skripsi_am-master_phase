@@ -15,7 +15,7 @@ class SuperAdminMainScreen extends StatefulWidget {
   const SuperAdminMainScreen({
     super.key,
     required this.userName,
-    required this.userEmail, // Added userEmail
+    required this.userEmail, 
     required this.userRole,
   });
 
@@ -24,7 +24,7 @@ class SuperAdminMainScreen extends StatefulWidget {
 }
 
 class _SuperAdminMainScreenState extends State<SuperAdminMainScreen> {
-  int _pageIndex = 0; // Changed from _selectedIndex to _pageIndex
+  int _pageIndex = 0; 
 
   List<Widget> get _superAdminPages => [
         SuperAdminHomePage(userName: widget.userName, userEmail: widget.userEmail, userRole: widget.userRole),
@@ -49,7 +49,7 @@ class _SuperAdminMainScreenState extends State<SuperAdminMainScreen> {
   }
 
   int _mapBottomIndexToPageIndex(int index) {
-    if (index == 2) return _pageIndex; // The "empty" slot for FAB
+    if (index == 2) return _pageIndex; 
     if (index == 0) return 0;
     if (index == 1) return 1;
     if (index == 3) return 2;
