@@ -2,7 +2,7 @@ import 'package:asset_management/screen/history_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:intl/intl.dart'; 
 
 class History extends StatefulWidget {
   const History({Key? key}) : super(key: key);
@@ -29,7 +29,7 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
     _tabController = TabController(length: 2, vsync: this);
     _fetchHistoryData();
     _searchController.addListener(() {
-      setState(() {}); // Rebuild for search filter
+      setState(() {}); 
     });
   }
 
@@ -57,10 +57,10 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
               String formattedDate = DateFormat('dd MMM yyyy HH:mm:ss').format(parsedDate) + ' WIB';
               return {
                 'title': item['title'] as String,
-                'company': 'PT Dunia Persada', // Assuming fixed or from DB if available
+                'company': 'PT Dunia Persada', 
                 'date': formattedDate,
                 'status': 'Done',
-                'incident_id': item['incident_id']?.toString() ?? '0', // Added incident_id
+                'incident_id': item['incident_id']?.toString() ?? '0', 
               };
             }).toList();
             _isLoadingDone = false;
@@ -100,7 +100,7 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
                 'company': 'PT Dunia Persada',
                 'date': formattedDate,
                 'status': 'Rejected',
-                'incident_id': item['incident_id']?.toString() ?? '0', // Added incident_id
+                'incident_id': item['incident_id']?.toString() ?? '0',
               };
             }).toList();
             _isLoadingRejected = false;
@@ -125,7 +125,6 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
     }
   }
 
-  // Helper to get status background color for cards
   Color _getStatusBgColor(String status) {
     switch (status) {
       case 'Done':
@@ -137,7 +136,6 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
     }
   }
 
-  // Helper to get status text color for cards
   Color _getStatusTextColor(String status) {
     switch (status) {
       case 'Done':
@@ -151,10 +149,10 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
 
   Widget _buildCard(Map<String, String> item, bool isRejectedTab) {
     return Card(
-      color: Colors.white, // From NEW UI
+      color: Colors.white, 
       elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), // From NEW UI
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -162,42 +160,41 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
             MaterialPageRoute(
               builder: (context) => HistoryDetailScreen(
                 status: isRejectedTab ? 'rejected' : 'done',
-                // Pass incident_id for fetching detail
                 incident_id: int.tryParse(item['incident_id'] ?? '0') ?? 0,
               ),
             ),
           );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0), // Increased padding from 12.0 to 16.0 for a cleaner look
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.web_asset, size: 24.0, color: Colors.black54), // From NEW UI (Incident card)
-                  const SizedBox(width: 8.0), // From NEW UI (Incident card)
+                  const Icon(Icons.web_asset, size: 24.0, color: Colors.black54), 
+                  const SizedBox(width: 8.0),
                   Expanded(
-                    child: Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0, color: Colors.black87)), // Increased font size, changed color
+                    child: Text(item['title']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0, color: Colors.black87)), 
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0), // From NEW UI (Incident card)
+                    padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                     decoration: BoxDecoration(
-                      color: _getStatusBgColor(item['status']!), // Dynamic background color
-                      borderRadius: BorderRadius.circular(8.0), // From NEW UI (Incident card)
+                      color: _getStatusBgColor(item['status']!), 
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
                       item['status']!,
                       style: TextStyle(
                         fontSize: 12.0,
                         fontWeight: FontWeight.bold,
-                        color: _getStatusTextColor(item['status']!), // Dynamic text color
+                        color: _getStatusTextColor(item['status']!), 
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12.0), // From NEW UI (Incident card)
+              const SizedBox(height: 12.0), 
               Text(
                 item['company']!,
                 style: const TextStyle(
@@ -205,30 +202,30 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
                   color: Colors.black54,
                 ),
               ),
-              const SizedBox(height: 16.0), // From NEW UI (Incident card)
-              const Divider( // From NEW UI (Incident card)
+              const SizedBox(height: 16.0),
+              const Divider( 
                 height: 1.0,
                 color: Colors.grey,
               ),
-              const SizedBox(height: 16.0), // From NEW UI (Incident card)
+              const SizedBox(height: 16.0), 
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 20.0, color: Colors.black54), // From NEW UI (Incident card)
-                  const SizedBox(width: 8.0), // From NEW UI (Incident card)
+                  const Icon(Icons.calendar_today_outlined, size: 20.0, color: Colors.black54),
+                  const SizedBox(width: 8.0),
                   Expanded(
-                    child: Text(item['date']!, style: const TextStyle(fontSize: 14.0, color: Colors.black54)), // Changed font size and color
+                    child: Text(item['date']!, style: const TextStyle(fontSize: 14.0, color: Colors.black54)),
                   ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Detail', style: TextStyle(fontSize: 14.0, color: Colors.blue)), // From NEW UI (Incident card)
-                      const SizedBox(width: 4.0), // From NEW UI (Incident card)
+                      const Text('Detail', style: TextStyle(fontSize: 14.0, color: Colors.blue)),
+                      const SizedBox(width: 4.0), 
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade100, // From NEW UI (Incident card)
-                          shape: BoxShape.circle, // From NEW UI (Incident card)
+                          color: Colors.blue.shade100,
+                          shape: BoxShape.circle, 
                         ),
-                        child: Icon(Icons.arrow_forward_ios, size: 16.0, color: Colors.blue.shade700), // From NEW UI (Incident card)
+                        child: Icon(Icons.arrow_forward_ios, size: 16.0, color: Colors.blue.shade700), 
                       ),
                     ],
                   ),
@@ -281,7 +278,7 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
           Stack(
             children: [
               Container(
-                height: 100, // From NEW UI
+                height: 100, 
                 decoration: const BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/bg_image.png'),
@@ -289,13 +286,13 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ),
-              const Positioned( // From NEW UI
-                top: 45, // From NEW UI
+              const Positioned( 
+                top: 45, 
                 left: 0,
                 right: 0,
                 child: Center(
                   child: Text(
-                    'History', // From NEW UI
+                    'History', 
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
@@ -303,29 +300,29 @@ class _HistoryState extends State<History> with SingleTickerProviderStateMixin {
             ],
           ),
           Container(
-            color: Colors.white, // From NEW UI
+            color: Colors.white, 
             child: TabBar(
               controller: _tabController,
-              labelColor: Colors.blue, // From NEW UI
-              unselectedLabelColor: Colors.grey, // From NEW UI
-              tabs: const [ // From NEW UI
+              labelColor: Colors.blue, 
+              unselectedLabelColor: Colors.grey, 
+              tabs: const [ 
                 Tab(text: 'Done'),
                 Tab(text: 'Rejected'),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(12.0), // From NEW UI
+            padding: const EdgeInsets.all(12.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search...',
                 prefixIcon: const Icon(Icons.search),
-                filled: true, // From NEW UI
-                fillColor: Colors.white, // From NEW UI
+                filled: true, 
+                fillColor: Colors.white,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10), // From NEW UI
-                  borderSide: BorderSide.none, // From NEW UI
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),

@@ -1,11 +1,10 @@
-// auth_screen.dart
 import 'package:asset_management/screen/admin/admin_main_screen.dart';
 import 'package:asset_management/screen/main_screen.dart';
 import 'package:asset_management/screen/models/user_role.dart';
 import 'package:asset_management/screen/super_admin/SA_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert'; // for json decoding
+import 'dart:convert'; 
 
 class AuthScreen extends StatefulWidget {
   @override
@@ -13,12 +12,10 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  // Renamed _loginController to _emailController for NEW UI consistency
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
-  // Renamed _loginError to _emailError for NEW UI consistency
   bool _emailError = false;
   bool _passwordError = false;
 
@@ -39,11 +36,9 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> loginUser() async {
-    // Trim the input to remove any leading/trailing whitespace
-    final login = _emailController.text.trim(); // Use _emailController for 'login' parameter
+    final login = _emailController.text.trim(); 
     final password = _passwordController.text.trim();
 
-    // Reset error states before new login attempt
     setState(() {
       _emailError = false;
       _passwordError = false;
@@ -62,18 +57,16 @@ class _AuthScreenState extends State<AuthScreen> {
 
     if (data['status'] == 'success') {
       String role = data['role'];
-      String organizationName = data['organization_name']; // Extract organization_name from response
-      // Assuming 'email' is also returned from the API for each user.
-      String userEmail = data['email'] ?? '$login@example.com'; // Use actual email if provided, else construct one
+      String organizationName = data['organization_name'];
+      String userEmail = data['email'] ?? '$login@example.com'; 
       Widget targetScreen;
 
-      // Redirect based on role
       if (role == 'customer') {
         targetScreen = MainScreen(
           userName: login,
           userEmail: userEmail,
           userRole: UserRole.customer,
-          organizationName: organizationName, // Pass the extracted organizationName
+          organizationName: organizationName, 
         );
       } else if (role == 'admin') {
         targetScreen = AdminMainScreen(
@@ -88,7 +81,6 @@ class _AuthScreenState extends State<AuthScreen> {
           userRole: UserRole.superAdmin,
         );
       } else {
-        // Handle unknown role
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unknown role: $role')),
         );
@@ -101,8 +93,8 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } else {
       setState(() {
-        _emailError = true; // Set _emailError for login failure
-        _passwordError = true; // Set _passwordError for login failure
+        _emailError = true; 
+        _passwordError = true; 
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(data['message'])),
@@ -116,7 +108,7 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration( // Changed to const
+        decoration: const BoxDecoration( 
           image: DecorationImage(
             image: AssetImage('assets/auth.png'),
             fit: BoxFit.cover,
@@ -134,16 +126,16 @@ class _AuthScreenState extends State<AuthScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 40), // From NEW UI
+                const SizedBox(height: 40), 
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 24), // From NEW UI
+                  margin: const EdgeInsets.symmetric(horizontal: 24), 
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 32,
-                  ), // From NEW UI
+                  ), 
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20), // From NEW UI
+                    borderRadius: BorderRadius.circular(20), 
                   ),
                   child: Form(
                     key: _formKey,
@@ -156,8 +148,8 @@ class _AuthScreenState extends State<AuthScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 8), // From NEW UI
-                        const Text.rich( // Changed to const
+                        const SizedBox(height: 8), 
+                        const Text.rich( 
                           TextSpan(
                             children: [
                               TextSpan(
@@ -173,12 +165,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             ],
                           ),
                         ),
-                        // Email Field - Now uses _emailController
                         Align(
                           alignment: Alignment.centerLeft,
                           child: RichText(
-                            text: const TextSpan( // Changed to const
-                              text: 'Email ', // From NEW UI
+                            text: const TextSpan( 
+                              text: 'Email ', 
                               style: TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
@@ -189,11 +180,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4), // From NEW UI
+                        const SizedBox(height: 4), 
                         TextFormField(
-                          controller: _emailController, // Using _emailController
+                          controller: _emailController, 
                           decoration: InputDecoration(
-                            hintText: 'Email', // From NEW UI
+                            hintText: 'Email', 
                             filled: true,
                             fillColor: Colors.grey[100],
                             border: OutlineInputBorder(
@@ -202,13 +193,13 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        if (_emailError) // Using _emailError
+                        if (_emailError) 
                           const Padding(
                             padding: EdgeInsets.only(top: 4, left: 4),
                             child: Align(
                               alignment: Alignment.centerRight,
                               child: Text(
-                                'Wrong Email', // From NEW UI
+                                'Wrong Email',
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 12,
@@ -216,13 +207,12 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16), // From NEW UI
-                        // Password Field
+                        const SizedBox(height: 16), 
                         Align(
                           alignment: Alignment.centerLeft,
                           child: RichText(
-                            text: const TextSpan( // Changed to const
-                              text: 'Password', // From NEW UI
+                            text: const TextSpan(
+                              text: 'Password', 
                               style: TextStyle(color: Colors.black),
                               children: [
                                 TextSpan(
@@ -233,12 +223,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4), // From NEW UI
+                        const SizedBox(height: 4), 
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
-                            hintText: 'Password', // From NEW UI
+                            hintText: 'Password', 
                             filled: true,
                             fillColor: Colors.grey[100],
                             suffixIcon: IconButton(
@@ -265,7 +255,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             TextButton(
                               onPressed: () => showComingSoonPopup(context),
                               child: const Text(
-                                'Forgot Password?', // From NEW UI
+                                'Forgot Password?', 
                                 style: TextStyle(color: Colors.blue),
                               ),
                             ),
@@ -273,7 +263,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               const Padding(
                                 padding: EdgeInsets.only(right: 8),
                                 child: Text(
-                                  'Wrong Password', // From NEW UI
+                                  'Wrong Password', 
                                   style: TextStyle(
                                     color: Colors.red,
                                     fontSize: 12,
@@ -282,22 +272,22 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 40), // From NEW UI
+                        const SizedBox(height: 40),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(52, 152, 219, 1), // From NEW UI
+                            backgroundColor: const Color.fromRGBO(52, 152, 219, 1),
                             minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14), // From NEW UI
+                              borderRadius: BorderRadius.circular(14), 
                             ),
                           ),
-                          onPressed: loginUser, // Uses the preserved loginUser method
+                          onPressed: loginUser,
                           child: const Text(
-                            'Login', // From NEW UI
+                            'Login',
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
-                        const SizedBox(height: 24), // From NEW UI
+                        const SizedBox(height: 24), 
 
                       ],
                     ),

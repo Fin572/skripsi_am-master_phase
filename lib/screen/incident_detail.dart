@@ -1,23 +1,19 @@
 import 'dart:io';
-import 'package:asset_management/widgets/company_info_card.dart'; // Ensure this widget is available
+import 'package:asset_management/widgets/company_info_card.dart'; 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
-import 'package:asset_management/screen/models/location.dart'; // Assuming Location model is defined here or imported
-import 'package:asset_management/screen/models/asset.dart'; // Assuming Asset model is defined here or imported
-import 'package:asset_management/screen/models/incident_ticket.dart'; // Assuming IncidentTicket model is defined here or imported
+import 'package:asset_management/screen/models/location.dart';
+import 'package:asset_management/screen/models/asset.dart'; 
+import 'package:asset_management/screen/models/incident_ticket.dart';
 
 class IncidentDetailScreen extends StatefulWidget {
-  // Original constructor arguments, kept for compatibility if needed elsewhere
   final List<Location> availableLocations;
   final List<Asset> availableAssets;
 
   const IncidentDetailScreen({
     Key? key,
-    // These are now optional as data is fetched internally.
-    // However, if the calling screen always provides them, you can keep them required.
-    // For a hybrid approach, making them optional and using fetched data as fallback is safer.
     this.availableLocations = const [],
     this.availableAssets = const [],
   }) : super(key: key);
@@ -34,18 +30,18 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
   final TextEditingController _assetNameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  final List<File?> _incidentImages = List.filled(6, null); // Max 6 images based on NEW UI example
+  final List<File?> _incidentImages = List.filled(6, null);
   final List<String> _imageLabels = [
-    'Front View', // From NEW UI
-    'Rear View', // From NEW UI
-    'Top View', // From NEW UI
-    'Bottom View', // From NEW UI
-    'Other 1', // Label for additional image slots
-    'Other 2', // Label for additional image slots
+    'Front View', 
+    'Rear View',
+    'Top View', 
+    'Bottom View', 
+    'Other 1',
+    'Other 2', 
   ];
 
-  List<Location> _availableLocations = []; // Fetched from API
-  List<Asset> _availableAssets = []; // Fetched from API
+  List<Location> _availableLocations = []; 
+  List<Asset> _availableAssets = []; 
   bool _isLoadingLocations = true;
   bool _isLoadingAssets = true;
 
@@ -164,13 +160,13 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                   id: device['id'].toString(),
                   name: device['name'] as String? ?? 'Unknown',
                   locationId: locationId,
-                  category: device['category'] as String? ?? 'Device', // Populate category
-                  locationInfo: device['location_info'] as String? ?? '', // Populate location info
-                  latitude: (device['latitude'] as num?)?.toDouble() ?? 0.0, // Populate latitude
-                  longitude: (device['longitude'] as num?)?.toDouble() ?? 0.0, // Populate longitude
-                  personInCharge: device['person_in_charge'] as String? ?? '', // Populate PIC
-                  phoneNumber: device['phone_number'] as String? ?? '', // Populate phone number
-                  barcodeData: device['barcode_data'] as String? ?? '', // Populate barcode
+                  category: device['category'] as String? ?? 'Device', 
+                  locationInfo: device['location_info'] as String? ?? '', 
+                  latitude: (device['latitude'] as num?)?.toDouble() ?? 0.0,
+                  longitude: (device['longitude'] as num?)?.toDouble() ?? 0.0, 
+                  personInCharge: device['person_in_charge'] as String? ?? '', 
+                  phoneNumber: device['phone_number'] as String? ?? '', 
+                  barcodeData: device['barcode_data'] as String? ?? '', 
                 );
               }).toList();
               print('Available assets: $_availableAssets');
@@ -240,7 +236,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
         Uri.parse('http://assetin.my.id/skripsi/add_incident.php'),
       );
 
-      // Log all fields before sending
       print('Preparing to submit form data:');
       print('location_id: ${_selectedLocation!.id}');
       print('asset_id: ${_selectedAsset!.id}');
@@ -251,7 +246,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       request.fields['location_id'] = _selectedLocation!.id.toString();
       request.fields['asset_id'] = _selectedAsset!.id;
       request.fields['description'] = _descriptionController.text;
-      request.fields['status'] = 'Assigned'; // Default status for new tickets
+      request.fields['status'] = 'Assigned'; 
       request.fields['asset_name'] = _assetNameController.text;
 
       final List<String> imageFieldNames = ['image_0', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5'];
@@ -282,7 +277,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
           var data = json.decode(responseBody.body);
           if (data['status'] == 'success') {
             final newIncidentTicket = IncidentTicket(
-              ticketId: data['id'].toString(), // Use actual ID from response
+              ticketId: data['id'].toString(), 
               asset: _selectedAsset!,
               location: _selectedLocation!,
               description: _descriptionController.text,
@@ -294,7 +289,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(data['message'])),
             );
-            // Pop with the new ticket object for the Incident screen to handle
             Navigator.pop(context, newIncidentTicket);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -313,7 +307,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
         );
       }
     } else {
-      // Debug which validator failed
       String validationError = '';
       if (_selectedLocation == null) {
         validationError += 'Location ID is required. ';
@@ -420,50 +413,49 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // From NEW UI
+      backgroundColor: Colors.grey[100], 
       appBar: AppBar(
-        toolbarHeight: 100, // From NEW UI
+        toolbarHeight: 100, 
         title: const Text(
-          "Incident", // From NEW UI
+          "Incident",
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
         ),
-        flexibleSpace: const Image( // From NEW UI
+        flexibleSpace: const Image( 
           image: AssetImage('assets/bg_image.png'),
           fit: BoxFit.cover,
         ),
-        backgroundColor: Colors.transparent, // From NEW UI
-        elevation: 0, // From NEW UI
+        backgroundColor: Colors.transparent,
+        elevation: 0, 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white), // From NEW UI
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white), 
           onPressed: () async {
-            final bool? confirmed = await _showCancelConfirmationDialog(); // Uses new dialog
+            final bool? confirmed = await _showCancelConfirmationDialog(); 
             if (confirmed == true) {
-              Navigator.pop(context, false); // Signal cancellation to previous screen
+              Navigator.pop(context, false);
             }
           },
         ),
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0), // From NEW UI
+        padding: const EdgeInsets.all(16.0), 
         child: Form(
           key: _formKey,
-          onChanged: _validateForm, // From NEW UI
+          onChanged: _validateForm, 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Using CompanyInfoCard as in NEW UI, remove _companycard()
               const CompanyInfoCard(
-                ticketNumber: '#000001', // Example static value
-                companyName: 'PT Dunia Persada', // Example static value
-                deviceCount: '0 Device', // Example static value
+                ticketNumber: '#000001', 
+                companyName: 'PT Dunia Persada', 
+                deviceCount: '0 Device', 
               ),
 
-              const SizedBox(height: 20), // From NEW UI
+              const SizedBox(height: 20),
               _isLoadingLocations
                   ? const Center(child: CircularProgressIndicator())
                   : _availableLocations.isEmpty
@@ -481,7 +473,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                           onChanged: (Location? newValue) {
                             setState(() {
                               _selectedLocation = newValue;
-                              _selectedAsset = null; // Reset asset if location changes
+                              _selectedAsset = null; 
                               _assetNameController.clear();
                               print('Selected location: $_selectedLocation');
                               _validateForm();
@@ -492,7 +484,7 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                             return value == null ? 'Location ID is required' : null;
                           },
                         ),
-              const SizedBox(height: 15), // From NEW UI
+              const SizedBox(height: 15),
 
               _isLoadingAssets
                   ? const Center(child: CircularProgressIndicator())
@@ -527,19 +519,19 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                             return value == null ? 'Asset ID is required' : null;
                           },
                         ),
-              const SizedBox(height: 15), // From NEW UI
+              const SizedBox(height: 15), 
 
               _buildTextField(
                 controller: _assetNameController,
-                labelText: 'Device Name', // From NEW UI
+                labelText: 'Device Name', 
                 readOnly: true,
                 hintText: 'Auto-filled from Device ID',
               ),
-              const SizedBox(height: 15), // From NEW UI
+              const SizedBox(height: 15), 
 
               _buildTextField(
                 controller: _descriptionController,
-                labelText: 'Description', // From NEW UI
+                labelText: 'Description',
                 hintText: 'Enter incident description',
                 maxLines: 5,
                 validator: (value) {
@@ -548,65 +540,64 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
                 },
               ),
 
-              const SizedBox(height: 20), // From NEW UI
+              const SizedBox(height: 20), 
 
-              const Text('Upload Images', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // From NEW UI
-              const SizedBox(height: 10), // From NEW UI
+              const Text('Upload Images', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), 
+              const SizedBox(height: 10),
               GridView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(), // From NEW UI
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( // From NEW UI
+                physics: const NeverScrollableScrollPhysics(), 
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount( 
                   crossAxisCount: 2,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.2,
                 ),
-                itemCount: _incidentImages.length, // Only iterate through defined slots
+                itemCount: _incidentImages.length,
                 itemBuilder: (context, index) {
-                  return _buildImageUploadSlot(index); // Use the NEW UI style slot builder
+                  return _buildImageUploadSlot(index); 
                 },
               ),
-              // Moved "Add More" button outside GridView.builder for more control as per NEW UI
-              if (_incidentImages.any((file) => file == null)) // Only show if there's an empty slot to fill
+              if (_incidentImages.any((file) => file == null)) 
                 Padding(
                   padding: const EdgeInsets.only(top: 10.0),
-                  child: _buildAddMoreButton(), // Use the NEW UI style "Add More" button
+                  child: _buildAddMoreButton(), 
                 ),
-              const SizedBox(height: 30), // From NEW UI
+              const SizedBox(height: 30), 
 
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        final bool? confirmed = await _showCancelConfirmationDialog(); // Use new dialog
+                        final bool? confirmed = await _showCancelConfirmationDialog();
                         if (confirmed == true) {
                           Navigator.pop(context, false);
                         }
                       },
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey), // From NEW UI
-                        backgroundColor: const Color.fromARGB(245, 255, 255, 255), // From NEW UI
-                        padding: const EdgeInsets.symmetric(vertical: 15), // From NEW UI
+                        side: const BorderSide(color: Colors.grey),
+                        backgroundColor: const Color.fromARGB(245, 255, 255, 255), 
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0), // From NEW UI
+                          borderRadius: BorderRadius.circular(10.0), 
                         ),
                       ),
-                      child: const Text('Cancel', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))), // From NEW UI
+                      child: const Text('Cancel', style: TextStyle(color: Color.fromARGB(255, 0, 0, 0))), 
                     ),
                   ),
-                  const SizedBox(width: 15), // From NEW UI
+                  const SizedBox(width: 15), 
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _canSubmit ? _submitTicket : null, // Disable if not valid
+                      onPressed: _canSubmit ? _submitTicket : null, 
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _canSubmit ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey, // From NEW UI
-                        padding: const EdgeInsets.symmetric(vertical: 15), // From NEW UI
+                        backgroundColor: _canSubmit ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 15), 
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0), // From NEW UI
+                          borderRadius: BorderRadius.circular(10.0), 
                         ),
                       ),
-                      child: const Text('Submit', style: TextStyle(color: Colors.white)), // From NEW UI
+                      child: const Text('Submit', style: TextStyle(color: Colors.white)),
                     ),
                   ),
                 ],
@@ -618,7 +609,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
-  // Updated _buildTextField to match NEW UI
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -633,23 +623,23 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       keyboardType: keyboardType,
       readOnly: readOnly,
       maxLines: maxLines,
-      minLines: maxLines > 1 ? maxLines : null, // Ensures multiline for maxLines > 1
+      minLines: maxLines > 1 ? maxLines : null, 
       decoration: InputDecoration(
         labelText: '$labelText*',
         hintText: hintText,
-        floatingLabelBehavior: FloatingLabelBehavior.always, // From NEW UI
+        floatingLabelBehavior: FloatingLabelBehavior.always, 
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[400]!), // From NEW UI
-          borderRadius: BorderRadius.circular(8.0), // From NEW UI
+          borderSide: BorderSide(color: Colors.grey[400]!), 
+          borderRadius: BorderRadius.circular(8.0), 
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // From NEW UI
-          borderRadius: BorderRadius.circular(8.0), // From NEW UI
+          borderSide: const BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), 
+          borderRadius: BorderRadius.circular(8.0), 
         ),
-        filled: true, // From NEW UI
-        fillColor: readOnly ? Colors.grey[200] : Colors.white, // From NEW UI
-        contentPadding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0), // From NEW UI
+        filled: true, 
+        fillColor: readOnly ? Colors.grey[200] : Colors.white, 
+        contentPadding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 12.0), 
       ),
       validator: validator ??
           (value) {
@@ -661,7 +651,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
-  // Updated _buildDropdownField to match NEW UI
   Widget _buildDropdownField<T>({
     required T? value,
     required String hintText,
@@ -677,16 +666,16 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
         hintText: hintText,
         border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey[400]!), // From NEW UI
-          borderRadius: BorderRadius.circular(8.0), // From NEW UI
+          borderSide: BorderSide(color: Colors.grey[400]!), 
+          borderRadius: BorderRadius.circular(8.0), 
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), // From NEW UI
-          borderRadius: BorderRadius.all(Radius.circular(8.0)), // From NEW UI
+          borderSide: BorderSide(color: Color.fromRGBO(52, 152, 219, 1), width: 2.0), 
+          borderRadius: BorderRadius.all(Radius.circular(8.0)), 
         ),
-        filled: true, // From NEW UI
-        fillColor: Colors.white, // From NEW UI
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // From NEW UI
+        filled: true, 
+        fillColor: Colors.white, 
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), 
       ),
       items: items,
       onChanged: onChanged,
@@ -694,7 +683,6 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
-  // Updated _buildImageUploadSlot to match NEW UI
   Widget _buildImageUploadSlot(int index) {
     final file = _incidentImages[index];
 
@@ -704,64 +692,64 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white, // From NEW UI
-          borderRadius: BorderRadius.circular(8.0), // From NEW UI
-          border: Border.all(color: Colors.grey[300]!), // From NEW UI
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: Colors.grey[300]!), 
         ),
         child: file != null
             ? Stack(
                 fit: StackFit.expand,
                 children: [
-                  ClipRRect( // From NEW UI
-                    borderRadius: BorderRadius.circular(8.0), // From NEW UI
+                  ClipRRect( 
+                    borderRadius: BorderRadius.circular(8.0),
                     child: Image.file(file, fit: BoxFit.cover),
                   ),
-                  Positioned( // From NEW UI
+                  Positioned( 
                     top: 5,
                     right: 5,
                     child: GestureDetector(
                       onTap: () => _removeImage(index),
                       child: Container(
-                        padding: const EdgeInsets.all(4), // From NEW UI
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.8), // From NEW UI
-                          shape: BoxShape.circle, // From NEW UI
+                          color: Colors.red.withOpacity(0.8),
+                          shape: BoxShape.circle, 
                         ),
                         child: const Icon(
-                          Icons.delete, // From NEW UI
-                          color: Colors.white, // From NEW UI
-                          size: 18, // From NEW UI
+                          Icons.delete, 
+                          color: Colors.white, 
+                          size: 18, 
                         ),
                       ),
                     ),
                   ),
-                  Align( // From NEW UI
+                  Align( 
                     alignment: Alignment.bottomCenter,
                     child: Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 4.0), // From NEW UI
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5), // From NEW UI
-                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)), // From NEW UI
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)), 
                       ),
                       child: Text(
-                        _imageLabels[index], // From NEW UI
+                        _imageLabels[index],
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white, fontSize: 12), // From NEW UI
+                        style: const TextStyle(color: Colors.white, fontSize: 12), 
                       ),
                     ),
                   ),
                 ],
               )
-            : Column( // From NEW UI
+            : Column( 
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.image, size: 40, color: Colors.grey[400]), // From NEW UI
-                  const SizedBox(height: 5), // From NEW UI
+                  Icon(Icons.image, size: 40, color: Colors.grey[400]), 
+                  const SizedBox(height: 5), 
                   Text(
-                    _imageLabels[index], // From NEW UI
+                    _imageLabels[index], 
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12), // From NEW UI
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12)
                   ),
                 ],
               ),
@@ -769,17 +757,14 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
     );
   }
 
-  // Updated _buildAddMoreButton to match NEW UI
   Widget _buildAddMoreButton() {
-    // Only show "Add More" if there's at least one empty slot within the fixed 6 slots
     bool hasEmptySlot = _incidentImages.any((file) => file == null);
     if (!hasEmptySlot) {
-      return const SizedBox.shrink(); // Hide the button if all 6 slots are filled
+      return const SizedBox.shrink(); 
     }
 
     return GestureDetector(
       onTap: () {
-        // Find the first empty slot to add an image
         int firstEmptyIndex = _incidentImages.indexWhere((file) => file == null);
         if (firstEmptyIndex != -1) {
           _showImageSourceSelection(firstEmptyIndex);
@@ -787,18 +772,18 @@ class _IncidentDetailScreenState extends State<IncidentDetailScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white, // From NEW UI
-          borderRadius: BorderRadius.circular(8.0), // From NEW UI
-          border: Border.all(color: const Color.fromRGBO(52, 152, 219, 1), width: 2), // From NEW UI
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(8.0),
+          border: Border.all(color: const Color.fromRGBO(52, 152, 219, 1), width: 2), 
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add, size: 40, color: Color.fromRGBO(52, 152, 219, 1)), // From NEW UI
-            const SizedBox(height: 5), // From NEW UI
+            const Icon(Icons.add, size: 40, color: Color.fromRGBO(52, 152, 219, 1)), 
+            const SizedBox(height: 5), 
             const Text(
-              'Add More', // From NEW UI
-              style: TextStyle(color: Color.fromRGBO(52, 152, 219, 1), fontSize: 14), // From NEW UI
+              'Add More', 
+              style: TextStyle(color: Color.fromRGBO(52, 152, 219, 1), fontSize: 14), 
             ),
           ],
         ),

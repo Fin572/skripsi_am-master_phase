@@ -8,8 +8,6 @@ import 'package:asset_management/screen/models/location.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
 
 class AddDeviceScreen extends StatefulWidget {
-  // Removed `required List<Location> availableLocations` from constructor
-  // as it's now fetched internally.
   const AddDeviceScreen({Key? key}) : super(key: key);
 
   @override
@@ -23,16 +21,16 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   String? _selectedCategory;
   final TextEditingController _quantityController = TextEditingController();
   final TextEditingController _assetNameController = TextEditingController();
-  final TextEditingController _personInChargeController = TextEditingController(); // Updated from _locationPICController
-  final TextEditingController _personInChargePhoneController = TextEditingController(); // New controller
+  final TextEditingController _personInChargeController = TextEditingController(); 
+  final TextEditingController _personInChargePhoneController = TextEditingController(); 
 
-  final List<File?> _deviceImages = List.filled(5, null); // 4 specific views + 1 for "Add More" concept
+  final List<File?> _deviceImages = List.filled(5, null); 
   final List<String> _imageLabels = [
     'Front View',
     'Rear View',
     'Top View',
     'Bottom View',
-    'Add More', // Last slot is for 'Add More'
+    'Add More', 
   ];
 
   final List<String> _availableCategories = [
@@ -51,16 +49,16 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     _fetchLocations();
     _quantityController.addListener(_validateForm);
     _assetNameController.addListener(_validateForm);
-    _personInChargeController.addListener(_validateForm); // Listen to new PIC controller
-    _personInChargePhoneController.addListener(_validateForm); // Listen to new phone controller
+    _personInChargeController.addListener(_validateForm);
+    _personInChargePhoneController.addListener(_validateForm); 
   }
 
   @override
   void dispose() {
     _quantityController.dispose();
     _assetNameController.dispose();
-    _personInChargeController.dispose(); // Dispose new PIC controller
-    _personInChargePhoneController.dispose(); // Dispose new phone controller
+    _personInChargeController.dispose();
+    _personInChargePhoneController.dispose(); 
     super.dispose();
   }
 
@@ -76,7 +74,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           setState(() {
             _availableLocations = (data['locations'] as List)
                 .map((location) => Location(
-                      id: location['location_id'].toString(), // <--- CHANGED THIS LINE: Removed int.parse()
+                      id: location['location_id'].toString(), 
                       name: location['name'] as String,
                     ))
                 .toList();
@@ -111,9 +109,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     bool isCategorySelected = _selectedCategory != null;
     bool isQuantityFilled = _quantityController.text.isNotEmpty;
     bool isAssetNameFilled = _assetNameController.text.isNotEmpty;
-    bool isPersonInChargeFilled = _personInChargeController.text.isNotEmpty; // Updated to new PIC field
-    bool isPersonInChargePhoneFilled = _personInChargePhoneController.text.isNotEmpty; // New phone field
-    bool hasAtLeastOneImage = _deviceImages.sublist(0, 4).any((file) => file != null); // Check only specific image slots
+    bool isPersonInChargeFilled = _personInChargeController.text.isNotEmpty; 
+    bool isPersonInChargePhoneFilled = _personInChargePhoneController.text.isNotEmpty; 
+    bool hasAtLeastOneImage = _deviceImages.sublist(0, 4).any((file) => file != null); 
 
     return isLocationSelected &&
         isCategorySelected &&
@@ -133,13 +131,13 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
       request.fields['location_id'] = _selectedLocation!.id.toString();
       request.fields['device_type'] = _selectedCategory!;
-      request.fields['locationPIC_id'] = _personInChargeController.text; // Using _personInChargeController for locationPIC_id
+      request.fields['locationPIC_id'] = _personInChargeController.text; 
       request.fields['quantity'] = _quantityController.text;
       request.fields['name'] = _assetNameController.text;
-      request.fields['phone_number'] = _personInChargePhoneController.text; // New phone number field
+      request.fields['phone_number'] = _personInChargePhoneController.text; 
 
       final List<String> imageFieldNames = ['front_view', 'rear_view', 'top_view', 'bottom_view'];
-      for (int i = 0; i < 4; i++) { // Loop only for the first 4 specific image slots
+      for (int i = 0; i < 4; i++) { 
         if (_deviceImages[i] != null) {
           print('Uploading image for ${imageFieldNames[i]}: ${_deviceImages[i]!.path}');
           request.files.add(await http.MultipartFile.fromPath(
@@ -150,7 +148,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         }
       }
 
-      // Log data yang akan dikirim
       print('Submitting data: ${request.fields}');
 
       try {
@@ -248,7 +245,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 
-  // --- Helper for general text fields (can be reused) ---
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -276,7 +272,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
           borderRadius: BorderRadius.circular(8.0),
         ),
         filled: true, // Always fill the field
-        fillColor: readOnly ? Colors.grey[200] : Colors.white, // White when not readOnly, grey when readOnly
+        fillColor: readOnly ? Colors.grey[200] : Colors.white, 
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       ),
       validator: validator ??
@@ -290,7 +286,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   }
 
 
-  // --- Helper for dropdown fields (can be reused) ---
   Widget _buildDropdownField<T>({
     required T? value,
     required String hintText,
@@ -325,7 +320,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Define the consistent AppBar height
     const double consistentAppBarHeight = 100.0;
 
     return Scaffold(
@@ -334,9 +328,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area (95.0px)
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: consistentAppBarHeight,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -349,12 +342,12 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     IconButton(
                       icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                       onPressed: () {
-                        Navigator.pop(context, false); // Indicate cancellation if simply going back
+                        Navigator.pop(context, false); 
                       },
                     ),
                     const SizedBox(width: 16),
                     const Text(
-                      'Add device', // Title from image
+                      'Add device', 
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -372,21 +365,19 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          onChanged: _validateForm, // Validate on any form field change
+          onChanged: _validateForm, 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Company Info Card
               const CompanyInfoCard(
                 ticketNumber: '#000001',
                 companyName: 'PT Dunia Persada',
-                deviceCount: '0 Device', // As per image for initial state
+                deviceCount: '0 Device',
               ),
               const SizedBox(height: 20),
 
-              // Location ID Dropdown
               FutureBuilder<List<Location>>(
-                future: Future.value(_availableLocations), // Use Future.value for immediate data
+                future: Future.value(_availableLocations), 
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -415,7 +406,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Category and Quantity in a Row
               Row(
                 children: [
                   Expanded(
@@ -439,7 +429,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   ),
                   const SizedBox(width: 15),
                   SizedBox(
-                    width: 120, // Fixed width for Quantity field
+                    width: 120, 
                     child: _buildTextField(
                       controller: _quantityController,
                       labelText: 'Quantity',
@@ -460,7 +450,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Asset name
               _buildTextField(
                 controller: _assetNameController,
                 labelText: 'Device name',
@@ -469,7 +458,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Person in charge
               _buildTextField(
                 controller: _personInChargeController,
                 labelText: 'Person in charge',
@@ -478,7 +466,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
               const SizedBox(height: 15),
 
-              // Person in charge's phone number
               _buildTextField(
                 controller: _personInChargePhoneController,
                 labelText: 'Person in charge\'s phone number',
@@ -488,7 +475,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Upload Images Section
               const Text('Upload Images*', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               GridView.builder(
@@ -500,20 +486,18 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   mainAxisSpacing: 10,
                   childAspectRatio: 1.2,
                 ),
-                itemCount: _deviceImages.length, // 5 slots from image
+                itemCount: _deviceImages.length, 
                 itemBuilder: (context, index) {
                   return _buildImageUploadSlot(index);
                 },
               ),
               const SizedBox(height: 30),
 
-              // Cancel and Submit Buttons
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        // Pop back and signal cancellation
                         Navigator.pop(context, false);
                       },
                       style: OutlinedButton.styleFrom(
@@ -530,7 +514,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   const SizedBox(width: 15),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _canSubmit ? _submitDevice : null, // Disable if not valid
+                      onPressed: _canSubmit ? _submitDevice : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _canSubmit ? const Color.fromRGBO(52, 152, 219, 1) : Colors.grey,
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -550,19 +534,15 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     );
   }
 
-  // --- Helper Widget for Image Upload Slots (adapted for this screen) ---
   Widget _buildImageUploadSlot(int index) {
     final file = _deviceImages[index];
 
-    // For the 'Add More' slot (the last one, index 4)
     if (index == _deviceImages.length - 1) {
-      // Show 'Add More' only if at least one of the first 4 slots is empty
       if (_deviceImages.sublist(0, _deviceImages.length - 1).every((img) => img != null)) {
-        return const SizedBox.shrink(); // Hide if all specific slots are filled
+        return const SizedBox.shrink(); 
       }
       return GestureDetector(
         onTap: () {
-          // Find the first empty specific slot (indices 0-3) to add an image
           int targetIndex = _deviceImages.sublist(0, 4).indexWhere((img) => img == null);
           if (targetIndex != -1) {
             _showImageSourceSelection(targetIndex);
@@ -594,7 +574,6 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       );
     }
 
-    // For specific view slots (Front, Rear, Top, Bottom, indices 0-3)
     return GestureDetector(
       onTap: () {
         if (file == null) _showImageSourceSelection(index);
@@ -642,7 +621,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                         borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8.0)),
                       ),
                       child: Text(
-                        _imageLabels[index], // e.g., "Front View"
+                        _imageLabels[index], 
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: Colors.white, fontSize: 12),
                       ),
@@ -656,7 +635,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   Icon(Icons.image, size: 40, color: Colors.grey[400]),
                   const SizedBox(height: 5),
                   Text(
-                    _imageLabels[index], // e.g., "Front View"
+                    _imageLabels[index], 
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                   ),

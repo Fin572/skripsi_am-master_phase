@@ -14,22 +14,19 @@ class DevicesScreen extends StatefulWidget {
 }
 
 class _DevicesScreenState extends State<DevicesScreen> {
-  List<Map<String, dynamic>> _locations = []; // List to store fetched locations
-  bool _isLoading = true; // To manage loading state
+  List<Map<String, dynamic>> _locations = []; 
+  bool _isLoading = true; 
   bool _showSuccessPopup = false;
-  bool _isEditing = false; // New state variable for edit mode
-  Set<String> _selectedLocationIds = {}; // Stores IDs of selected locations for deletion
+  bool _isEditing = false; 
+  Set<String> _selectedLocationIds = {}; 
 
-  // Assume organizationId is fetched from user context or hardcoded for now
-  // In a real app, this should be passed from parent widget or fetched from auth/session
-  final String _organizationId = "1"; // Replace with dynamic value, e.g., user's organization ID (like for PT Dunia Persada)
+  final String _organizationId = "1"; 
 
-  // This method will fetch locations from the database
   Future<void> _fetchLocations() async {
     setState(() {
       _isLoading = true;
-      _locations.clear(); // Clear existing data to prevent duplicates on refresh
-      _selectedLocationIds.clear(); // Clear selections on refresh
+      _locations.clear(); 
+      _selectedLocationIds.clear(); 
     });
     final response = await http.get(Uri.parse('http://assetin.my.id/skripsi/get_location.php'));
 
@@ -80,13 +77,13 @@ class _DevicesScreenState extends State<DevicesScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // No
+                Navigator.of(context).pop(false);
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // Yes
+                Navigator.of(context).pop(true); 
               },
               child: const Text('Yes'),
             ),
@@ -96,13 +93,11 @@ class _DevicesScreenState extends State<DevicesScreen> {
     );
 
     if (confirm == true) {
-      // Implement actual deletion logic via API call for selected IDs
-      // For now, simulating deletion from local list
       setState(() {
         _locations.removeWhere((location) => _selectedLocationIds.contains(location['location_id'].toString()));
         _selectedLocationIds.clear();
         if (_locations.isEmpty) {
-          _isEditing = false; // Exit edit mode if all items are deleted
+          _isEditing = false; 
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,14 +112,13 @@ class _DevicesScreenState extends State<DevicesScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchLocations(); // Fetch locations when the page loads
+    _fetchLocations(); 
   }
 
-  // Method to navigate to Add Location page
   void _addLocation() async {
     final newLocation = await Navigator.push<Location>(
       context,
-      MaterialPageRoute(builder: (context) => AddLocationScreen(organizationId: _organizationId)), // Pass the required organizationId
+      MaterialPageRoute(builder: (context) => AddLocationScreen(organizationId: _organizationId)),
     );
 
     if (newLocation != null) {
@@ -139,7 +133,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
           });
         }
       });
-      _fetchLocations(); // Refresh the list after adding a new location
+      _fetchLocations(); 
     }
   }
 
@@ -147,7 +141,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
     setState(() {
       _isEditing = !_isEditing;
       if (!_isEditing) {
-        _selectedLocationIds.clear(); // Clear selection when exiting edit mode
+        _selectedLocationIds.clear(); 
       }
     });
   }
@@ -164,13 +158,12 @@ class _DevicesScreenState extends State<DevicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate total assets dynamically (assuming 'deviceCount' is available in location data)
     final totalAssetsCount = _locations.fold(0, (sum, location) => sum + (int.tryParse(location['deviceCount']?.toString() ?? '0') ?? 0));
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(245, 245, 245, 245), // From NEW UI
+      backgroundColor: const Color.fromARGB(245, 245, 245, 245), 
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(95.0), // Consistent height
+        preferredSize: const Size.fromHeight(95.0),
         child: Stack(
           children: [
             Image.asset(
@@ -197,14 +190,12 @@ class _DevicesScreenState extends State<DevicesScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(), // Pushes actions to the right
-                    // Show delete icon only when editing and items are selected
+                    const Spacer(), 
                     if (_isEditing && _selectedLocationIds.isNotEmpty)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.white),
                         onPressed: _deleteLocations,
                       ),
-                    // Show edit icon only if there are items to edit, or if currently editing to exit
                     if (_locations.isNotEmpty || _isEditing)
                       IconButton(
                         icon: Icon(_isEditing ? Icons.done_all : Icons.edit, color: Colors.white),
@@ -227,7 +218,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                 child: CompanyInfoCard(
                   ticketNumber: '#000001',
                   companyName: 'PT Dunia Persada',
-                  deviceCount: _isLoading ? 'Loading...' : '$totalAssetsCount Device', // Dynamic asset count, fixed string comparison
+                  deviceCount: _isLoading ? 'Loading...' : '$totalAssetsCount Device',
                 ),
               ),
               Expanded(
@@ -284,7 +275,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
                                         ? const BorderSide(color: Colors.blue, width: 2.0)
                                         : BorderSide.none,
                                   ),
-                                  color: Colors.white, // From NEW UI
+                                  color: Colors.white, 
                                   elevation: 2,
                                   margin: const EdgeInsets.symmetric(vertical: 8.0),
                                   child: Padding(
@@ -354,7 +345,6 @@ class _DevicesScreenState extends State<DevicesScreen> {
             ],
           ),
 
-          // Floating action button based on editing mode
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -391,7 +381,6 @@ class _DevicesScreenState extends State<DevicesScreen> {
             ),
           ),
 
-          // Success popup
           if (_showSuccessPopup)
             Positioned(
               top: 0,
@@ -400,7 +389,7 @@ class _DevicesScreenState extends State<DevicesScreen> {
               child: Container(
                 color: Colors.green,
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                child: const SafeArea( // Changed to const
+                child: const SafeArea( 
                   child: Row(
                     children: [
                       Icon(Icons.check_circle_outline, color: Colors.white),
@@ -415,7 +404,6 @@ class _DevicesScreenState extends State<DevicesScreen> {
               ),
             ),
 
-          // Loading indicator
           if (_isLoading)
             const Center(
               child: CircularProgressIndicator(),

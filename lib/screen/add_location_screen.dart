@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert'; // for json decoding
-import 'package:asset_management/screen/models/location.dart'; // Ensure this model exists and matches your data structure
+import 'dart:convert'; 
+import 'package:asset_management/screen/models/location.dart';
 
 class AddLocationScreen extends StatefulWidget {
   const AddLocationScreen({Key? key, required String organizationId}) : super(key: key);
@@ -14,10 +14,8 @@ class AddLocationScreen extends StatefulWidget {
 
 class _AddLocationScreenState extends State<AddLocationScreen> {
   MapController? mapController;
-  // Example: Monas, Jakarta. Use LatLng from latlong2
   final LatLng _center = const LatLng(-6.1753924, 106.8271528);
-  // LatLng for the current center of the map, used for submission and display
-  LatLng _currentMapCenter = const LatLng(-6.1753924, 106.8271528); // Initialize with default
+  LatLng _currentMapCenter = const LatLng(-6.1753924, 106.8271528); 
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _locationNameController = TextEditingController();
@@ -33,7 +31,6 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
 
   Future<void> _submitLocation() async {
   if (_formKey.currentState!.validate()) {
-    // Hardcode organization_id to 2 and validate it
     String organizationId = "2";
     if (organizationId != "2") {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,7 +61,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Location added successfully!')),
       );
-      Navigator.pop(context); // Close the screen after success
+      Navigator.pop(context); 
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add location: ${data['message']}')),
@@ -88,17 +85,15 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(245, 245, 245, 245),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(95.0), // Height similar to your example
+        preferredSize: const Size.fromHeight(95.0), 
         child: Stack(
           children: [
-            // Background image for the AppBar
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: 95,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
-            // Content of the AppBar (back button and title)
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -128,7 +123,7 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
         child: Column(
           children: [
             SizedBox(
-              height: 250, // Height for the map
+              height: 250,
               child: Stack(
                 children: [
                   FlutterMap(
@@ -137,7 +132,6 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                       initialCenter: _center,
                       initialZoom: 15.0,
                       onPositionChanged: (position, hasGesture) {
-                        // Update the current map center when the map moves
                         if (position.center != null) {
                           setState(() {
                             _currentMapCenter = position.center!;
@@ -148,16 +142,15 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                     children: [
                       TileLayer(
                         urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        subdomains: const ['a', 'b', 'c'], // Use subdomains to distribute load and reduce errors
-                        userAgentPackageName: 'com.example.app', // Replace with your package name
+                        subdomains: const ['a', 'b', 'c'], 
+                        userAgentPackageName: 'com.example.app', 
                         additionalOptions: const {
-                          'User-Agent': 'AssetManagementApp/1.0', // Explicit user agent to comply with OSM policies
+                          'User-Agent': 'AssetManagementApp/1.0', 
                         },
                       ),
                     ],
                   ),
                   const Center(
-                    // This is the static pin visually in the center
                     child: Icon(Icons.location_on, color: Colors.red, size: 40),
                   ),
                   Positioned(
@@ -190,7 +183,6 @@ class _AddLocationScreenState extends State<AddLocationScreen> {
                 ],
               ),
             ),
-            // Display the current geolocation below the map
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(

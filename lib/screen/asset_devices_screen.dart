@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:asset_management/screen/add_device_screen.dart';
 import 'package:asset_management/screen/asset_category_detail_screen.dart';
 import 'package:asset_management/widgets/company_info_card.dart';
-import 'package:asset_management/screen/models/asset.dart'; // Import the Asset model
+import 'package:asset_management/screen/models/asset.dart'; 
 
 class AssetDevicesScreen extends StatefulWidget {
   final bool showSuccessPopup;
@@ -18,10 +18,10 @@ class AssetDevicesScreen extends StatefulWidget {
 
 class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
   bool _showSuccessPopup = false;
-  bool _isEditing = false; // New state variable for edit mode
-  Set<String> _selectedCategoryNames = {}; // Stores names of selected categories
+  bool _isEditing = false; 
+  Set<String> _selectedCategoryNames = {}; 
 
-  List<Map<String, dynamic>> _assetCategoryData = []; // Now mutable, fetched from API
+  List<Map<String, dynamic>> _assetCategoryData = [];
   bool _isLoading = true;
   String _errorMessage = '';
 
@@ -73,7 +73,7 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
     setState(() {
       _isEditing = !_isEditing;
       if (!_isEditing) {
-        _selectedCategoryNames.clear(); // Clear selection when exiting edit mode
+        _selectedCategoryNames.clear(); 
       }
     });
   }
@@ -105,13 +105,13 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // No
+                Navigator.of(context).pop(false); 
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // Yes
+                Navigator.of(context).pop(true); 
               },
               child: const Text('Yes'),
             ),
@@ -121,12 +121,10 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
     );
 
     if (confirm == true) {
-      // TODO: Implement actual deletion logic via API call here
-      // For now, simulate deletion from local list
       setState(() {
         _assetCategoryData.removeWhere((category) => _selectedCategoryNames.contains(category['categoryName']));
         _selectedCategoryNames.clear();
-        if (_assetCategoryData.isEmpty) { // Exit edit mode if all items are deleted
+        if (_assetCategoryData.isEmpty) { 
           _isEditing = false;
         }
       });
@@ -140,10 +138,8 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Define the consistent AppBar height
     const double consistentAppBarHeight = 100.0;
 
-    // Calculate total assets dynamically
     final totalAssetsCount = _assetCategoryData.fold(0, (sum, category) => sum + int.parse(category['deviceCount'] ?? '0'));
 
 
@@ -153,9 +149,8 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
         preferredSize: const Size.fromHeight(consistentAppBarHeight),
         child: Stack(
           children: [
-            // Background image that covers the entire PreferredSize area (95.0px)
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png', 
               height: consistentAppBarHeight,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -180,14 +175,12 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(), // Pushes actions to the right
-                    // Show delete icon only when editing and items are selected
+                    const Spacer(), 
                     if (_isEditing && _selectedCategoryNames.isNotEmpty)
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.white),
                         onPressed: _confirmAndDeleteCategories,
                       ),
-                    // Show edit icon only if there are items to edit, or if currently editing to exit
                     if (_assetCategoryData.isNotEmpty || _isEditing)
                       IconButton(
                         icon: Icon(_isEditing ? Icons.done_all : Icons.edit, color: Colors.white),
@@ -211,7 +204,7 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                   companyName: 'PT Dunia Persada',
                   deviceCount: _isLoading
                       ? 'Loading...'
-                      : '$totalAssetsCount Device', // Updated to dynamically reflect data
+                      : '$totalAssetsCount Device', 
                 ),
               ),
               Expanded(
@@ -240,24 +233,11 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                                       if (_isEditing) {
                                         _toggleSelectCategory(categoryName);
                                       } else {
-                                        // Fetch actual assets for the category before navigating
-                                        // For this example, we're navigating directly.
-                                        // In a real app, you'd fetch assets related to this categoryName
-                                        // and pass them. Since the original asset_category_detail_screen.dart
-                                        // fetches its own data, we can pass an empty list initially,
-                                        // or refactor to fetch here and pass. For now, matching the NEW UI's data passing.
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
                                             builder: (context) => AssetCategoryDetailScreen(
-                                              categoryName: categoryName,
-                                              // NOTE: The original asset_category_detail_screen.dart fetches its own data.
-                                              // To fully match NEW UI's direct asset passing, you'd fetch them here.
-                                              // For now, we'll rely on AssetCategoryDetailScreen to fetch its own.
-                                              // But the NEW UI example for AssetDevicesScreen passes a 'devices' list.
-                                              // If your API provides 'devices' directly here, you can use:
-                                              // assetsInCategory: (category['devices'] as List<dynamic>?)?.map((e) => Asset.fromJson(e)).toList() ?? [],
-                                              // For now, passing a placeholder as the original AssetCategoryDetailScreen handles fetching.
+                                              categoryName: categoryName,                                  
                                             ),
                                           ),
                                         );
@@ -304,17 +284,15 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                                                 ],
                                               ),
                                             ),
-                                            if (!_isEditing) // Show detail button only when not in editing mode
+                                            if (!_isEditing) 
                                               TextButton(
                                                 onPressed: () {
-                                                  // Navigate to AssetCategoryDetailScreen
                                                   Navigator.push(
                                                     context,
                                                     MaterialPageRoute(
                                                       builder: (context) => AssetCategoryDetailScreen(
                                                         categoryName: categoryName,
-                                                        // Passing empty list as the target screen will fetch its own
-                                                        // based on your original file.
+                                               
                                                       ),
                                                     ),
                                                   );
@@ -357,9 +335,9 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                           onPressed: () async {
                             final result = await Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const AddDeviceScreen()), // Pass empty list as constructor now requires it
+                              MaterialPageRoute(builder: (context) => const AddDeviceScreen()), 
                             );
-                            if (result == true) { // If device was successfully added
+                            if (result == true) { 
                               setState(() {
                                 _showSuccessPopup = true;
                               });
@@ -370,7 +348,7 @@ class _AssetDevicesScreenState extends State<AssetDevicesScreen> {
                                   });
                                 }
                               });
-                              _fetchCategories(); // Refresh categories after adding a device
+                              _fetchCategories(); 
                             }
                           },
                           style: ElevatedButton.styleFrom(

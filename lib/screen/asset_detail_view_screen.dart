@@ -1,15 +1,13 @@
-// lib/screens/asset_detail_view_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart'; // For map display
-import 'package:latlong2/latlong.dart'; // For LatLng
-import 'package:asset_management/screen/models/asset.dart'; // Import the updated Asset model
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart'; 
+import 'package:asset_management/screen/models/asset.dart';
 
 class AssetDetailViewScreen extends StatelessWidget {
-  final Asset asset; // This screen receives a full Asset object
+  final Asset asset; 
 
   const AssetDetailViewScreen({Key? key, required this.asset}) : super(key: key);
 
-  // Helper for displaying a single info row
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -40,17 +38,15 @@ class AssetDetailViewScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(95.0), // Consistent height for the app bar
+        preferredSize: const Size.fromHeight(95.0), 
         child: Stack(
           children: [
-            // Background image for the AppBar
             Image.asset(
-              'assets/bg_image.png', // Ensure this path is correct
+              'assets/bg_image.png',
               height: 95,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
-            // Content of the AppBar (back button and title)
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -62,7 +58,7 @@ class AssetDetailViewScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     const Text(
-                      'Devices', // Title "Devices" from the image
+                      'Devices',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -80,21 +76,21 @@ class AssetDetailViewScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(
-              height: 250, // Height for the map
+              height: 250, 
               child: Stack(
                 children: [
                   FlutterMap(
                     options: MapOptions(
-                      initialCenter: LatLng(asset.latitude, asset.longitude), // Center map on asset's coordinates
-                      initialZoom: 15.0, // Zoom level
+                      initialCenter: LatLng(asset.latitude, asset.longitude),
+                      initialZoom: 15.0, 
                       interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate, // Allow pan/zoom, but not rotate
+                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate, 
                       ),
                     ),
                     children: [
                       TileLayer(
                         urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.example.your_app_name', // Replace with your package name
+                        userAgentPackageName: 'com.example.your_app_name',
                       ),
                       MarkerLayer(
                         markers: [
@@ -108,7 +104,6 @@ class AssetDetailViewScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  // No search bar on the map in this specific image for detail view
                 ],
               ),
             ),
@@ -117,7 +112,6 @@ class AssetDetailViewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Asset Details Card ---
                   Card(
                     color: Colors.white,
                     elevation: 2,
@@ -128,7 +122,7 @@ class AssetDetailViewScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            asset.name, // e.g., CCTV
+                            asset.name, 
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
                           ),
                           const SizedBox(height: 10),
@@ -146,8 +140,6 @@ class AssetDetailViewScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // --- Asset's Barcode Section ---
                   const Text(
                     "Asset's Barcode",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -155,18 +147,16 @@ class AssetDetailViewScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    height: 150, // Height for barcode image
+                    height: 150, 
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey[300]!),
                     ),
                     child: Center(
-                      // Placeholder for barcode. You'd use a package like barcode_widget
-                      // or network image if barcode is from server.
                       child: asset.barcodeData != null && asset.barcodeData!.isNotEmpty
                           ? Text(
-                              'Barcode: ${asset.barcodeData}', // Display barcode data as text
+                              'Barcode: ${asset.barcodeData}', 
                               style: const TextStyle(fontSize: 16, color: Colors.black54),
                             )
                           : const Text(
@@ -175,7 +165,7 @@ class AssetDetailViewScreen extends StatelessWidget {
                             ),
                     ),
                   ),
-                  const SizedBox(height: 20), // Spacing at the bottom
+                  const SizedBox(height: 20), 
                 ],
               ),
             ),

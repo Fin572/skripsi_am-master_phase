@@ -2,8 +2,8 @@ import 'package:asset_management/screen/devices_screen.dart';
 import 'package:asset_management/screen/incident.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:asset_management/screen/main_screen.dart'; // Import MainScreen
-import 'package:asset_management/screen/models/user_role.dart'; // Import UserRole enum
+import 'package:asset_management/screen/main_screen.dart'; 
+import 'package:asset_management/screen/models/user_role.dart'; 
 
 void showComingSoonPopup(BuildContext context) {
   showDialog(
@@ -25,7 +25,7 @@ class UserHomePage extends StatefulWidget {
   final String userName;
   final String userEmail;
   final UserRole userRole;
-  final String organizationName; // Parameter for direct passing
+  final String organizationName; 
 
   const UserHomePage({
     super.key,
@@ -40,12 +40,11 @@ class UserHomePage extends StatefulWidget {
 }
 
 class _UserHomePageState extends State<UserHomePage> {
-  late String _companyEmail; // Set in initState for consistency
-
+  late String _companyEmail;
   @override
   void initState() {
     super.initState();
-    _companyEmail = widget.userEmail; // Use user's email as fallback; adjust if organization email is available
+    _companyEmail = widget.userEmail; 
   }
 
   @override
@@ -54,7 +53,6 @@ class _UserHomePageState extends State<UserHomePage> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background image
           Container(
             height: MediaQuery.of(context).size.height * 0.33,
             decoration: const BoxDecoration(
@@ -65,31 +63,30 @@ class _UserHomePageState extends State<UserHomePage> {
             ),
           ),
 
-          // Scrollable foreground content
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 60), // From NEW UI
+                const SizedBox(height: 60), 
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16), // From NEW UI
+                  padding: const EdgeInsets.symmetric(horizontal: 16), 
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Hi, Welcome", style: TextStyle(fontSize: 22, color: Colors.white)), // From NEW UI
-                      const SizedBox(height: 16), // From NEW UI
+                      const Text("Hi, Welcome", style: TextStyle(fontSize: 22, color: Colors.white)),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
                           const CircleAvatar(
                             radius: 25,
                             backgroundImage: AssetImage("assets/profile.png"),
                           ),
-                          const SizedBox(width: 10), // From NEW UI
+                          const SizedBox(width: 10), 
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(widget.userName, style: const TextStyle(fontSize: 18, color: Colors.white)), // Uses widget.userName
-                              Text(widget.userEmail, style: const TextStyle(color: Colors.white70)), // Uses widget.userEmail
+                              Text(widget.userName, style: const TextStyle(fontSize: 18, color: Colors.white)), 
+                              Text(widget.userEmail, style: const TextStyle(color: Colors.white70)), 
                             ],
                           ),
                         ],
@@ -98,15 +95,15 @@ class _UserHomePageState extends State<UserHomePage> {
                   ),
                 ),
 
-                const SizedBox(height: 4), // From NEW UI
-                _buildCompanyCard(), // Uses passed organizationName
-                const SizedBox(height: 15), // From NEW UI
+                const SizedBox(height: 4), 
+                _buildCompanyCard(), 
+                const SizedBox(height: 15), 
 
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16), // From NEW UI
-                  child: Text('Ticketing', style: TextStyle(fontWeight: FontWeight.bold)), // From NEW UI
+                  padding: EdgeInsets.symmetric(horizontal: 16), 
+                  child: Text('Ticketing', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                const SizedBox(height: 12), // From NEW UI
+                const SizedBox(height: 12), 
 
                 _customCard(
                   title: 'Incident',
@@ -118,13 +115,13 @@ class _UserHomePageState extends State<UserHomePage> {
                     );
                   },
                 ),
-                const SizedBox(height: 12), // From NEW UI
+                const SizedBox(height: 12), 
 
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16), // From NEW UI
-                  child: Text('Devices', style: TextStyle(fontWeight: FontWeight.bold)), // From NEW UI
+                  padding: EdgeInsets.symmetric(horizontal: 16), 
+                  child: Text('Devices', style: TextStyle(fontWeight: FontWeight.bold)), 
                 ),
-                const SizedBox(height: 12), // From NEW UI
+                const SizedBox(height: 12), 
 
                 _customCard(
                   title: 'Devices',
@@ -136,7 +133,7 @@ class _UserHomePageState extends State<UserHomePage> {
                     );
                   },
                 ),
-                const SizedBox(height: 24), // From NEW UI
+                const SizedBox(height: 24), 
               ],
             ),
           ),
@@ -149,10 +146,10 @@ class _UserHomePageState extends State<UserHomePage> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Card(
-        color: const Color.fromARGB(255, 255, 255, 255), // From NEW UI
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), // From NEW UI
+        color: const Color.fromARGB(255, 255, 255, 255), 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), 
         child: Padding(
-          padding: const EdgeInsets.all(16.0), // From NEW UI
+          padding: const EdgeInsets.all(16.0), 
           child: Column(
             children: [
               Row(
@@ -161,28 +158,28 @@ class _UserHomePageState extends State<UserHomePage> {
                     radius: 25,
                     backgroundImage: AssetImage('assets/company.png'),
                   ),
-                  const SizedBox(width: 15), // From NEW UI
+                  const SizedBox(width: 15), 
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.organizationName.isEmpty ? 'No Company Name' : widget.organizationName, // Uses passed organizationName
+                        widget.organizationName.isEmpty ? 'No Company Name' : widget.organizationName,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      Text(_companyEmail, style: const TextStyle(color: Colors.grey)), // Uses _companyEmail
+                      Text(_companyEmail, style: const TextStyle(color: Colors.grey)),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 20), // From NEW UI
+              const SizedBox(height: 20), 
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly, // From NEW UI
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Text(
-                    DateFormat("dd MMM yyyy").format(DateTime.now()), // From NEW UI
-                    style: const TextStyle(fontWeight: FontWeight.bold), // From NEW UI
+                    DateFormat("dd MMM yyyy").format(DateTime.now()), 
+                    style: const TextStyle(fontWeight: FontWeight.bold), 
                   ),
-                  const Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)), // From NEW UI
+                  const Text("09.00 - 17.00", style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ],
@@ -200,16 +197,16 @@ class _UserHomePageState extends State<UserHomePage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16), // From NEW UI
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), // From NEW UI
+        margin: const EdgeInsets.symmetric(horizontal: 16), 
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), 
         decoration: BoxDecoration(
-          color: Colors.white, // From NEW UI
-          borderRadius: BorderRadius.circular(16), // From NEW UI
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.shade300, // From NEW UI
-              blurRadius: 6, // From NEW UI
-              offset: const Offset(0, 2), // From NEW UI
+              color: Colors.grey.shade300, 
+              blurRadius: 6, 
+              offset: const Offset(0, 2), 
             )
           ],
         ),
@@ -219,15 +216,15 @@ class _UserHomePageState extends State<UserHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), // From NEW UI
-                  const SizedBox(height: 4), // Added a small space
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4), 
                 ],
               ),
             ),
             if (iconPath != null)
               SizedBox(
-                height: 48, // From NEW UI
-                width: 48, // From NEW UI
+                height: 48, 
+                width: 48, 
                 child: Image.asset(iconPath, fit: BoxFit.contain),
               ),
           ],

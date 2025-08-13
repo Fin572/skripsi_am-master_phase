@@ -82,20 +82,19 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
 
   Future<void> _fetchTickets(String statusParam, List<IncidentTicket> ticketList, ValueSetter<bool> setLoading, ValueSetter<String> setError) async {
     try {
-      // PERBAIKAN: Tambah retry mechanism sederhana hingga 3 kali untuk handle timeout
-      http.Response? response; // PERBAIKAN: Ubah dari 'Response?' ke 'http.Response?' untuk definisi class yang benar dari package http
+      http.Response? response; 
       int retryCount = 0;
       const int maxRetries = 3;
       while (response == null && retryCount < maxRetries) {
         try {
-          response = await http.get(Uri.parse('http://assetin.my.id/skripsi/incident_get.php?status=$statusParam')).timeout(const Duration(seconds: 30)); // PERBAIKAN: Tingkatkan timeout dari 10 ke 30 detik
+          response = await http.get(Uri.parse('http://assetin.my.id/skripsi/incident_get.php?status=$statusParam')).timeout(const Duration(seconds: 30));
         } catch (e) {
           retryCount++;
           print('Retry $retryCount for status $statusParam due to error: $e');
           if (retryCount >= maxRetries) {
-            throw e; // Lempar error jika gagal setelah retry
+            throw e; 
           }
-          await Future.delayed(const Duration(seconds: 2)); // Delay sebelum retry
+          await Future.delayed(const Duration(seconds: 2)); 
         }
       }
       print('Response Status: ${response!.statusCode}');
@@ -122,26 +121,25 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
                   String base64Str = e.toString().trim();
                   if (base64Str.isEmpty) {
                     print('Empty base64 string detected for item ${item['incident_id']}');
-                    return null; // Skip empty
+                    return null; 
                   }
                   if (base64Str.startsWith('data:image/')) {
                     base64Str = base64Str.split(',').last;
                   }
                   base64Str = base64Str.replaceAll('\n', '').replaceAll('\r', '').replaceAll(' ', '');
-                  if (base64Str.length < 100) { // Minimal length untuk image valid
+                  if (base64Str.length < 100) {
                     print('Invalid short base64 string for item ${item['incident_id']}');
                     return null;
                   }
-                  // Tambahkan padding jika diperlukan untuk base64 yang valid
                   while (base64Str.length % 4 != 0) {
                     base64Str += '=';
                   }
                   try {
-                    base64Decode(base64Str); // Test decode tanpa simpan, untuk verifikasi
+                    base64Decode(base64Str); 
                     return base64Str;
                   } catch (error) {
                     print('Error decoding base64 for item ${item['incident_id']}: $error');
-                    return null; // Skip jika invalid
+                    return null; 
                   }
                 }).where((s) => s != null).cast<String>().toList() ?? [];
             if (imageUrls.length > 4) {
@@ -170,7 +168,6 @@ class _IncidentState extends State<Incident> with SingleTickerProviderStateMixin
         setLoading(false);
       }
     } catch (e, stack) {
-      // PERBAIKAN: Pesan error lebih informatif untuk user
       setError('Gagal memuat data: Koneksi timeout atau server tidak responsif. Silakan periksa koneksi internet atau coba lagi nanti. Detail: $e');
       setLoading(false);
       print('Exception in fetch: $e\nStack trace: $stack');
