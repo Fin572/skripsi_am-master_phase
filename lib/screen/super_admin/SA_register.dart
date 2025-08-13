@@ -417,7 +417,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               _buildTextField(
                                 _emailController,
                                 'Email*', // Label dari NEW UI
-                                'Email', // Hint dari NEW UI
+                                'name@example.com', // Hint dari NEW UI
                                 TextInputType.emailAddress,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) return 'Email is required';
@@ -430,7 +430,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               _buildTextField(
                                 _passwordController,
                                 'Password*', // Label dari NEW UI
-                                'Password', // Hint dari NEW UI
+                                'Minimum 6 characters', // Hint dari NEW UI
                                 TextInputType.visiblePassword,
                                 obscureText: _obscurePassword,
                                 showVisibilityToggle: true,
@@ -445,7 +445,7 @@ class _SuperAdminRegisterState extends State<SuperAdminRegister> {
                               _buildTextField(
                                 _confirmPasswordController,
                                 'Confirm password*', // Label dari NEW UI
-                                'Confirm password', // Hint dari NEW UI
+                                '', // Hint dari NEW UI
                                 TextInputType.visiblePassword,
                                 obscureText: _obscureConfirmPassword,
                                 showVisibilityToggle: true,
